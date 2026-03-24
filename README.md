@@ -79,41 +79,6 @@ If neither has a definition, it tells you that too instead of just showing nothi
 2. Open Firefox → `about:debugging` → **This Firefox**
 3. Click **Load Temporary Add-on…**
 4. Select `manifest.json` from the repo folder
-
----
-
-## Files
-
-```
-instant-dictionary/
-├── manifest.json     # Extension config (MV2)
-├── content.js        # All the logic — event listeners, API calls, tooltip rendering
-├── content.css       # Tooltip styles + countdown bar animation
-├── updates.json      # Auto-update manifest for Firefox
-└── icons/
-    └── icon.png
-```
-
-There's no build step, no dependencies, no bundler. It's plain JS injected directly into pages as a content script.
-
----
-
-## Updating
-
-When a new version is released:
-
-1. Upload the new `.xpi` to GitHub Releases under a new tag (e.g. `v1.0.1`)
-2. Add the new version entry to `updates.json`:
-
-```json
-{
-  "version": "1.0.1",
-  "update_link": "https://github.com/0x000UK/instant-dictionary/releases/download/v1.0.1/instant-dictionary.xpi"
-}
-```
-
-Firefox checks `updates.json` automatically and prompts users to update.
-
 ---
 
 ## Permissions
