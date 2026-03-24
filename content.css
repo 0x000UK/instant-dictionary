@@ -1,0 +1,260 @@
+/* ─── Tooltip container ─── */
+#dict-tooltip {
+  display: none;
+  position: absolute;
+  z-index: 2147483647;
+  width: 370px;
+  max-height: 450px;
+  overflow-y: auto;
+  background: var(--dict-bg, #ffffff);
+  border: 1px solid var(--dict-border, #e0e0e0);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dict-text, #333);
+  /* Reset inherited styles from the host page */
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  word-spacing: normal;
+  box-sizing: border-box;
+  animation: dict-fade-in 0.18s ease;
+  /* Smooth vertical repositioning when real content replaces the loading
+     placeholder near the viewport bottom. Only `top` needs a transition
+     since horizontal position is set once on open. */
+  transition: top 0.12s ease;
+}
+
+/* Ensure all children also use border-box */
+#dict-tooltip *,
+#dict-tooltip *::before,
+#dict-tooltip *::after {
+  box-sizing: inherit;
+}
+
+@keyframes dict-fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Header ───
+ *
+ * Background colour is derived from the host page's background by JS
+ * and written into --dict-header-bg, so the header blends naturally with
+ * any page — light, dark, or tinted.
+ */
+#dict-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--dict-header-bg, #f5f5f5);
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid var(--dict-border, #e0e0e0);
+  color: var(--dict-text, #333);
+}
+
+#dict-tooltip-word {
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: capitalize;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#dict-tooltip-phonetic {
+  font-size: 13px;
+  opacity: 0.65;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+#dict-tooltip-close {
+  margin-left: auto;
+  background: var(--dict-close-bg, rgba(0, 0, 0, 0.08));
+  border: none;
+  color: var(--dict-text, #333);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+#dict-tooltip-close:hover {
+  background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.18));
+}
+
+/* Focus ring for keyboard users */
+#dict-tooltip-close:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 2px;
+}
+
+/* ─── Body ─── */
+#dict-tooltip-body {
+  padding: 12px 16px;
+}
+
+/* ─── Source label ─── */
+#dict-tooltip-source {
+  padding: 0 16px 10px;
+  font-size: 10px;
+  color: var(--dict-subtext, #bbb);
+  text-align: right;
+}
+
+/* ─── Loading / error states ─── */
+.dict-loading {
+  text-align: center;
+  color: var(--dict-subtext, #888);
+  padding: 10px 0;
+  margin: 0;
+}
+
+.dict-error {
+  color: #e74c3c;
+  margin: 0;
+}
+
+.dict-suggestion {
+  color: var(--dict-subtext, #888);
+  font-size: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* ─── Meanings ─── */
+.dict-meaning {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--dict-divider, #f0f0f0);
+}
+
+.dict-meaning:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.dict-pos {
+  display: inline-block;
+  background: var(--dict-accent-bg, rgba(0, 0, 0, 0.06));
+  color: var(--dict-accent-text, #555);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.dict-def {
+  margin: 4px 0;
+}
+
+.dict-example {
+  margin: 2px 0 8px 12px;
+  color: var(--dict-subtext, #888);
+  font-style: italic;
+  font-size: 13px;
+  border-left: 2px solid var(--dict-accent-text, #888);
+  padding-left: 8px;
+}
+
+.dict-synonyms,
+.dict-antonyms {
+  font-size: 12px;
+  color: var(--dict-subtext, #666);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.dict-antonyms strong {
+  color: #e74c3c;
+}
+
+/* ─── Audio button ─── */
+.dict-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--dict-accent-bg, rgba(0, 0, 0, 0.06));
+  color: var(--dict-accent-text, #555);
+  border: 1px solid var(--dict-border, #e0e0e0);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+
+.dict-audio-btn:hover {
+  background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.13));
+}
+
+.dict-audio-btn:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 2px;
+}
+
+/* ─── Auto-close countdown bar ───
+ *
+ * The bar is only animated while the .dict-counting class is present,
+ * so it only plays when the tooltip is visible. It pauses on hover and
+ * triggers hideTooltip() via an animationend listener in JS.
+ */
+
+/* Base ::after — structural styles only, no animation */
+#dict-tooltip::after {
+  content: "";
+  display: block;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--dict-accent-text, #888);
+  border-radius: 0 0 12px 12px;
+  transform-origin: left;
+}
+
+/* Countdown animation is active only when .dict-counting is present */
+#dict-tooltip.dict-counting::after {
+  animation: dict-countdown var(--dict-auto-close-ms, 8000ms) linear forwards;
+}
+
+/* Pause the bar while the cursor is inside the tooltip */
+#dict-tooltip.dict-counting:hover::after {
+  animation-play-state: paused;
+}
+
+@keyframes dict-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+#dict-tooltip::-webkit-scrollbar {
+  width: 6px;
+}
+
+#dict-tooltip::-webkit-scrollbar-thumb {
+  background: var(--dict-border, #ccc);
+  border-radius: 3px;
+}
+
+#dict-tooltip::-webkit-scrollbar-thumb:hover {
+  background: var(--dict-subtext, #aaa);
+}
