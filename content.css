@@ -1,11 +1,34 @@
 /* ─── Tooltip container ─── */
+/*
+ * position: fixed keeps the tooltip anchored to the viewport even when the
+ * page scrolls. The shadow host is fixed at 0,0 with zero size, so all
+ * left/top values set by JS are pure viewport coordinates.
+ *
+ * pointer-events: auto re-enables mouse interaction on the tooltip itself;
+ * the shadow host has pointer-events: none so it doesn't intercept page clicks.
+ *
+ * overflow: hidden clips child backgrounds to the border-radius reliably
+ * across all browsers. box-shadow is painted outside the border-box so it
+ * is not affected.
+ *
+ * isolation: isolate creates an explicit stacking context so z-index
+ * comparisons are self-contained and cannot bleed into the host page.
+ *
+ * max-height and overflow are removed from this element and moved to the
+ * inner scroll area (#dict-tooltip-scroll-area) so the countdown bar always
+ * remains visible at the very bottom of the tooltip regardless of scroll
+ * position.
+ *
+ * transition: top provides a smooth vertical shift when content finishes
+ * loading and the tooltip height changes. JS suppresses this via an inline
+ * style override when first showing a new word so the tooltip doesn't slide
+ * across the screen from its previous position.
+ */
 #dict-tooltip {
   display: none;
-  position: absolute;
+  position: fixed;
   z-index: 2147483647;
   width: 370px;
-  max-height: 450px;
-  overflow-y: auto;
   background: var(--dict-bg, #ffffff);
   border: 1px solid var(--dict-border, #e0e0e0);
   border-radius: 12px;
@@ -14,16 +37,16 @@
   font-size: 14px;
   line-height: 1.5;
   color: var(--dict-text, #333);
-  /* Reset inherited styles from the host page */
+  /* Reset inherited styles that could bleed in from the host page */
   text-align: left;
   text-transform: none;
   letter-spacing: normal;
   word-spacing: normal;
   box-sizing: border-box;
+  pointer-events: auto;
+  overflow: hidden; /* clips child backgrounds to border-radius cross-browser */
+  isolation: isolate; /* own stacking context; prevents z-index bleed into host */
   animation: dict-fade-in 0.18s ease;
-  /* Smooth vertical repositioning when real content replaces the loading
-     placeholder near the viewport bottom. Only `top` needs a transition
-     since horizontal position is set once on open. */
   transition: top 0.12s ease;
 }
 
@@ -39,12 +62,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Header ───
- *
- * Background colour is derived from the host page's background by JS
- * and written into --dict-header-bg, so the header blends naturally with
- * any page — light, dark, or tinted.
- */
+/* ─── Header ─── */
 #dict-tooltip-header {
   display: flex;
   align-items: center;
@@ -54,29 +72,108 @@
   border-radius: 12px 12px 0 0;
   border-bottom: 1px solid var(--dict-border, #e0e0e0);
   color: var(--dict-text, #333);
+  /* Prevent text selection when the user clicks the close button rapidly. */
+  user-select: none;
 }
 
 #dict-tooltip-word {
   font-size: 17px;
   font-weight: 700;
-  text-transform: capitalize;
   max-width: 250px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Allow the word itself to be selected/copied. */
+  user-select: text;
 }
 
 #dict-tooltip-phonetic {
   font-size: 13px;
   opacity: 0.65;
   font-style: italic;
+  flex-shrink: 1;         /* allow shrink so it never overflows the header */
+  min-width: 0;           /* permits flex shrink below intrinsic size */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Header right group ───
+ *
+ * Wraps the MW switch button and the close button so they sit flush-right
+ * together regardless of whether the switch button is visible.  Using a
+ * nested flex container rather than individual margin-left:auto assignments
+ * prevents the close button from jumping laterally when the switch button
+ * appears or disappears.
+ */
+#dict-tooltip-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
   flex-shrink: 0;
 }
 
+/* ─── MW dictionary switch button ───
+ *
+ * Only visible when MW produced the result AND both MW keys are configured.
+ * The button sits inside #dict-tooltip-header-right, left of the close button.
+ *
+ * Intentionally compact — it must not dominate the header.  Pill-shaped with
+ * a swap icon prefix (⇄ injected by JS) so its purpose is immediately clear.
+ * font-size 11px keeps it clearly subordinate to the word heading.
+ */
+#dict-mw-switch-btn {
+  display: none; /* JS overrides to "" when applicable */
+  align-items: center;
+  gap: 3px;
+  background: var(--dict-accent-bg, rgba(0, 0, 0, 0.06));
+  color: var(--dict-accent-text, #555);
+  border: 1px solid var(--dict-border, #e0e0e0);
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.18s, opacity 0.18s;
+  touch-action: manipulation;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Shown state set by JS: element.style.display = "inline-flex".
+ * Hidden state set by JS: element.style.display = "none". */
+
+#dict-mw-switch-btn:hover {
+  background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.13));
+}
+
+#dict-mw-switch-btn:active {
+  background: var(--dict-border, rgba(0, 0, 0, 0.18));
+}
+
+#dict-mw-switch-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#dict-mw-switch-btn:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 2px;
+}
+
 #dict-tooltip-close {
-  margin-left: auto;
   background: var(--dict-close-bg, rgba(0, 0, 0, 0.08));
   border: none;
+  /* appearance: none removes platform-native button chrome on Safari/iOS
+     so only our explicit styles are applied. */
+  -webkit-appearance: none;
+  appearance: none;
   color: var(--dict-text, #333);
   font-size: 18px;
   line-height: 1;
@@ -90,16 +187,58 @@
   transition: background 0.2s;
   flex-shrink: 0;
   padding: 0;
+  /* Prevent 300 ms tap delay on touch devices. */
+  touch-action: manipulation;
+  user-select: none;
 }
 
 #dict-tooltip-close:hover {
   background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.18));
 }
 
-/* Focus ring for keyboard users */
 #dict-tooltip-close:focus-visible {
   outline: 2px solid var(--dict-accent-text, #555);
   outline-offset: 2px;
+}
+
+/* ─── Scroll area ───
+ *
+ * Wraps the body and source label so only this region scrolls. Keeping
+ * overflow here (and off the tooltip root) ensures the countdown bar is
+ * always visible at the bottom of the tooltip no matter how long the
+ * definition is.
+ *
+ * overscroll-behavior-y: contain prevents the scroll event from propagating
+ * to the page beneath the tooltip when the user reaches the top or bottom
+ * of the scroll area (scroll chaining / rubber-band bleed-through).
+ *
+ * scrollbar-width / scrollbar-color are the W3C Scrollbar Styling standard,
+ * supported by Firefox since v64. The -webkit-scrollbar pseudo-elements
+ * remain for Chromium-based environments.
+ */
+#dict-tooltip-scroll-area {
+  max-height: 400px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dict-border, #ccc) transparent;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--dict-border, #ccc);
+  border-radius: 3px;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--dict-subtext, #aaa);
 }
 
 /* ─── Body ─── */
@@ -123,6 +262,12 @@
   margin: 0;
 }
 
+/*
+ * margin: 0 explicitly resets the UA default block margins that a <p> element
+ * carries. Without this, error messages add unintended vertical whitespace
+ * that throws off the body padding rhythm — identical to the reset already
+ * applied to .dict-loading.
+ */
 .dict-error {
   color: #e74c3c;
   margin: 0;
@@ -155,7 +300,8 @@
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  /* 0.05em scales with font size rather than being fixed in px. */
+  letter-spacing: 0.05em;
   padding: 2px 8px;
   border-radius: 4px;
   margin-bottom: 6px;
@@ -194,12 +340,16 @@
   background: var(--dict-accent-bg, rgba(0, 0, 0, 0.06));
   color: var(--dict-accent-text, #555);
   border: 1px solid var(--dict-border, #e0e0e0);
+  -webkit-appearance: none;
+  appearance: none;
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 13px;
   cursor: pointer;
   margin-top: 8px;
   transition: background 0.2s;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .dict-audio-btn:hover {
@@ -213,31 +363,34 @@
 
 /* ─── Auto-close countdown bar ───
  *
- * The bar is only animated while the .dict-counting class is present,
- * so it only plays when the tooltip is visible. It pauses on hover and
- * triggers hideTooltip() via an animationend listener in JS.
+ * This is a real DOM element (#dict-tooltip-countdown). A real element is
+ * reliable when the parent has overflow-y on a child scroll area;
+ * pseudo-element position:sticky is inconsistent across browsers in that
+ * context.
+ *
+ * The bar lives outside #dict-tooltip-scroll-area so it is always pinned to
+ * the bottom of the tooltip and is never scrolled out of view.
+ *
+ * The animation only plays while .dict-counting is present, and pauses when
+ * the cursor is over the tooltip. animationend fires on the bar element and
+ * bubbles up to #dict-tooltip where the JS listener closes the tooltip.
  */
-
-/* Base ::after — structural styles only, no animation */
-#dict-tooltip::after {
-  content: "";
-  display: block;
-  position: sticky;
-  bottom: 0;
-  left: 0;
+#dict-tooltip-countdown {
   height: 3px;
   background: var(--dict-accent-text, #888);
-  border-radius: 0 0 12px 12px;
+  /* border-radius is not needed here because #dict-tooltip has
+     overflow: hidden which clips the bar to the tooltip's rounded corners. */
   transform-origin: left;
+  transform: scaleX(0); /* hidden when not counting */
 }
 
-/* Countdown animation is active only when .dict-counting is present */
-#dict-tooltip.dict-counting::after {
+#dict-tooltip.dict-counting #dict-tooltip-countdown {
+  transform: scaleX(1);
   animation: dict-countdown var(--dict-auto-close-ms, 8000ms) linear forwards;
 }
 
 /* Pause the bar while the cursor is inside the tooltip */
-#dict-tooltip.dict-counting:hover::after {
+#dict-tooltip.dict-counting:hover #dict-tooltip-countdown {
   animation-play-state: paused;
 }
 
@@ -246,15 +399,294 @@
   to   { transform: scaleX(0); }
 }
 
-#dict-tooltip::-webkit-scrollbar {
-  width: 6px;
+/* ─── Selection-gate pill ────────────────────────────────────────────────────
+ *
+ * Shown after a click-drag selection so the user can confirm they want a
+ * dictionary lookup.
+ * Double-click bypasses the pill entirely.
+ *
+ * The pill is a fixed-position element that sits outside the tooltip; it lives
+ * in the same shadow root so it inherits the same style isolation.
+ *
+ * pointer-events: auto re-enables interaction (the shadow host is none).
+ * The entry animation is a quick spring-pop so it feels snappy, not sluggish.
+ *
+ * isolation: isolate creates an explicit stacking context for the pill so
+ * its z-index is self-contained.
+ *
+ * will-change: transform, opacity is set here (before the element is shown)
+ * so the compositor can promote it to its own layer ahead of the animation.
+ */
+#dict-pill {
+  display: none;
+  position: fixed;
+  z-index: 2147483647;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 7px;
+  background: var(--dict-pill-bg, #ffffff);
+  border: 1px solid var(--dict-pill-border, rgba(0,0,0,0.13));
+  border-radius: 999px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dict-pill-text, #333);
+  white-space: nowrap;
+  animation: dict-pill-pop 0.16s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-sizing: border-box;
+  isolation: isolate;
+  touch-action: manipulation;
+  will-change: transform, opacity;
 }
 
-#dict-tooltip::-webkit-scrollbar-thumb {
-  background: var(--dict-border, #ccc);
-  border-radius: 3px;
+#dict-pill.dict-pill-visible {
+  display: flex;
 }
 
-#dict-tooltip::-webkit-scrollbar-thumb:hover {
-  background: var(--dict-subtext, #aaa);
+/* Slight lift on hover */
+#dict-pill:hover {
+  box-shadow: 0 5px 18px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+
+#dict-pill:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+}
+
+/*
+ * Keyboard focus indicator for the pill. The pill is an interactive element
+ * that must be reachable via keyboard (WCAG 2.4.7). :focus-visible restricts
+ * the outline to keyboard navigation so mouse users never see a focus ring.
+ */
+#dict-pill:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 3px;
+}
+
+/* The icon inside the pill */
+#dict-pill-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+  /* Slight drop-shadow to make the icon pop on both light/dark backgrounds */
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
+}
+
+/* Entry pop animation */
+@keyframes dict-pill-pop {
+  from { opacity: 0; transform: scale(0.7) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);   }
+}
+
+/* Exit fade (applied by JS before removing .dict-pill-visible).
+ *
+ * pointer-events: none ensures clicks cannot land on the pill while it is
+ * fading out and visually disappearing — without this a fast user could
+ * trigger a lookup on a word they intended to dismiss.
+ */
+#dict-pill.dict-pill-hiding {
+  animation: dict-pill-fade 0.12s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes dict-pill-fade {
+  from { opacity: 1; transform: scale(1)    translateY(0);   }
+  to   { opacity: 0; transform: scale(0.85) translateY(3px); }
+}
+
+/* ─── Reduced-motion overrides ───────────────────────────────────────────────
+ *
+ * WCAG 2.1 Success Criterion 2.3.3 (Animation from Interactions, AAA) and
+ * the broadly adopted 2.1 Level AA expectation both require that motion
+ * triggered by interaction can be disabled. When the OS "reduce motion"
+ * preference is active, all animations and transitions are either disabled
+ * or collapsed to instant cuts.
+ *
+ * The countdown bar still plays but at 1ms duration (effectively instant)
+ * so the auto-close mechanism still fires; only the visual sweep is removed.
+ */
+@media (prefers-reduced-motion: reduce) {
+  #dict-tooltip {
+    animation: none;
+    transition: none;
+    will-change: auto;
+  }
+
+  #dict-pill {
+    animation: none;
+    will-change: auto;
+  }
+
+  #dict-pill:hover,
+  #dict-pill:active {
+    transform: none;
+  }
+
+  #dict-pill.dict-pill-hiding {
+    animation: none;
+    opacity: 0;
+  }
+
+  #dict-tooltip-close,
+  .dict-audio-btn,
+  #dict-mw-switch-btn {
+    transition: none;
+  }
+
+  #dict-tooltip.dict-counting #dict-tooltip-countdown {
+    animation-duration: 1ms;
+  }
+
+  @keyframes dict-pill-pop {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @keyframes dict-fade-in {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* ─── Forced-colours (Windows High Contrast) support ────────────────────────
+ *
+ * In forced-colours mode the browser replaces most author colours with a
+ * restricted system palette, but it cannot override SVG filter effects,
+ * box-shadow, or opacity used for purely decorative reasons. Explicit
+ * overrides here ensure every interactive element has a visible border and
+ * uses palette keywords so the UA can map them correctly.
+ *
+ * ButtonText / ButtonFace / Highlight / HighlightText are CSS system colour
+ * keywords guaranteed to exist in forced-colours mode.
+ *
+ * forced-color-adjust: none is used only where preserving the author colour
+ * is essential for conveying semantic meaning that cannot be expressed any
+ * other way — specifically: error red (.dict-error) and antonym red
+ * (.dict-antonyms strong). Without it those elements would render in the
+ * system ButtonText colour, indistinguishable from normal text, silently
+ * dropping the "this is wrong / this is an opposite" signal.
+ */
+@media (forced-colors: active) {
+  #dict-tooltip {
+    border: 2px solid ButtonText;
+    box-shadow: none;
+  }
+
+  #dict-tooltip-header {
+    border-bottom: 1px solid ButtonText;
+  }
+
+  #dict-tooltip-close {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-tooltip-close:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  #dict-tooltip-close:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .dict-pos {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  /*
+   * Preserve the semantic error-red so the user can still distinguish an
+   * error message from regular definition text. The UA cannot convey this
+   * distinction through its system palette alone.
+   */
+  .dict-error {
+    color: #e74c3c;
+    forced-color-adjust: none;
+  }
+
+  /*
+   * Preserve the semantic antonym-red so antonyms remain visually distinct
+   * from synonyms, which is information that plain text colour is the only
+   * vehicle for in this layout.
+   */
+  .dict-antonyms strong {
+    color: #e74c3c;
+    forced-color-adjust: none;
+  }
+
+  .dict-audio-btn {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-mw-switch-btn {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-mw-switch-btn:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  #dict-mw-switch-btn:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .dict-audio-btn:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .dict-audio-btn:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  #dict-tooltip-countdown {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  #dict-pill {
+    border: 2px solid ButtonText;
+    box-shadow: none;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-pill:hover {
+    background: Highlight;
+    color: HighlightText;
+    transform: none; /* no visual lift — focus on legibility */
+    box-shadow: none;
+  }
+
+  #dict-pill:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 3px;
+  }
+
+  #dict-pill-icon {
+    filter: none;
+    forced-color-adjust: auto;
+  }
 }

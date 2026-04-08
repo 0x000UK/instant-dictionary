@@ -1,42 +1,62 @@
 {
   "manifest_version": 2,
   "name": "Instant Dictionary",
-  "version": "1.0.0",
+  "version": "1.2.4",
   "description": "Double-click or select any word, phrase, or idiom to see its definition instantly.",
   "author": "UK",
   "homepage_url": "https://github.com/0x000UK",
-
   "permissions": [
-    "activeTab",
-    "<all_urls>"
+    "<all_urls>",
+    "storage"
   ],
-
+  "web_accessible_resources": [
+    "content.css",
+    "icons/icon.png"
+  ],
   "icons": {
+    "16":  "icons/icon.png",
+    "32":  "icons/icon.png",
+    "48":  "icons/icon.png",
+    "128": "icons/icon.png",
     "512": "icons/icon.png"
   },
-
   "browser_action": {
-    "default_icon": "icons/icon.png",
-    "default_title": "Instant Dictionary"
+    "default_icon": {
+      "16":  "icons/icon.png",
+      "32":  "icons/icon.png",
+      "48":  "icons/icon.png",
+      "128": "icons/icon.png"
+    },
+    "default_title": "Instant Dictionary Settings",
+    "default_popup": "popup.html"
   },
-
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "shared_constants.js",
+        "content.js"
+      ],
       "run_at": "document_idle",
       "all_frames": false
     }
   ],
-
-  "content_security_policy": "default-src 'none'; script-src 'self'; connect-src https://api.dictionaryapi.dev https://en.wiktionary.org; style-src 'self'; media-src https:;",
-
+  "content_security_policy": "default-src 'none'; script-src 'self'; connect-src https://api.dictionaryapi.dev https://en.wiktionary.org https://www.stands4.com https://www.dictionaryapi.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; media-src https:;",
   "browser_specific_settings": {
     "gecko": {
-      "id": "itsutkarshk711@gmail.com",
-      "strict_min_version": "109.0",
-      "update_url": "https://github.com/0x000UK/instant-dictionary/blob/main/updates.json"
+      "id": "{a3f7c2e1-84d6-4b9a-bc35-1f0e2d5a6c78}",
+      "strict_min_version": "142.0",
+      "update_url": "https://raw.githubusercontent.com/0x000UK/instant-dictionary/main/updates.json",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
     }
   }
 }

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Adapts native browser UI (scrollbars, autofill) to match the active theme. -->
+  <meta name="color-scheme" content="light dark" />
+  <title>Instant Dictionary — Settings</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN VIEW  — API Keys
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="view-main" class="app-view">
+
+    <!-- ─── Header ─── -->
+    <header class="popup-header">
+      <img src="icons/icon.png" alt="" class="popup-logo" />
+      <div class="popup-header-text">
+        <div class="popup-title">Instant Dictionary</div>
+        <div class="popup-subtitle">API Keys</div>
+      </div>
+      <button id="btn-open-settings" class="popup-icon-btn" type="button"
+              aria-label="Open settings (Lookup Priority, API Usage, Logs)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
+                   a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
+                   A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83
+                   l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
+                   A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83
+                   l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
+                   a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83
+                   l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
+                   a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- ─── Body ─── -->
+    <div class="popup-body">
+      <!-- #panel-api-keys is the only panel in the main view — no tab
+           switching occurs here, so is-active is intentionally static and
+           is not managed by popup.js.  If a second panel is ever added to
+           this view, convert to the JS-driven activateSettingsTab() pattern
+           used in the settings view. -->
+      <div id="panel-api-keys" class="popup-panel is-active" role="main">
+
+        <div class="popup-notice" role="note">
+          <span class="popup-notice-icon" aria-hidden="true">ℹ</span>
+          <p>Works out of the box — no accounts or keys needed. The optional integrations below unlock audio pronunciations and broader idiom &amp; phrase coverage.</p>
+        </div>
+
+        <!-- Merriam-Webster -->
+        <div class="popup-section-label" id="section-mw">
+          Merriam-Webster
+          <span class="popup-label-tag">optional</span>
+        </div>
+
+        <div class="popup-card" role="group" aria-labelledby="section-mw">
+          <p class="popup-hint">
+            One of the most authoritative English dictionaries. Connecting it adds
+            <strong>audio pronunciation playback</strong> and richer definitions for single words.
+            MW offers two separate API keys — a <strong>Collegiate Dictionary</strong> key and a
+            <strong>Thesaurus</strong> key — both free, each with up to 1,000 lookups per day.
+            You may enter one or both; when both are saved a toggle button appears in the definition
+            tooltip so you can switch between sources on demand.
+          </p>
+          <p class="popup-hint">
+            <a href="https://dictionaryapi.com/register/index" target="_blank" rel="noopener noreferrer">
+              Register for free API keys at dictionaryapi.com →
+            </a>
+          </p>
+
+          <!-- Collegiate Dictionary key -->
+          <div class="popup-field">
+            <label class="popup-label" for="mw-collegiate-key">
+              Collegiate Dictionary API Key
+            </label>
+            <div class="popup-input-wrap">
+              <input
+                type="password"
+                id="mw-collegiate-key"
+                class="popup-input"
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                aria-describedby="mw-collegiate-key-msg"
+              />
+              <button class="popup-eye-btn" type="button" data-target="mw-collegiate-key"
+                aria-label="Show Collegiate API key" title="Show / hide">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            <div class="popup-field-msg" id="mw-collegiate-key-msg" role="status" aria-live="polite"></div>
+          </div>
+
+          <!-- Thesaurus Dictionary key -->
+          <div class="popup-field">
+            <label class="popup-label" for="mw-thesaurus-key">
+              Thesaurus Dictionary API Key
+            </label>
+            <div class="popup-input-wrap">
+              <input
+                type="password"
+                id="mw-thesaurus-key"
+                class="popup-input"
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                aria-describedby="mw-thesaurus-key-msg"
+              />
+              <button class="popup-eye-btn" type="button" data-target="mw-thesaurus-key"
+                aria-label="Show Thesaurus API key" title="Show / hide">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            <div class="popup-field-msg" id="mw-thesaurus-key-msg" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <!-- STANDS4 -->
+        <div class="popup-section-label" id="section-s4">
+          STANDS4
+          <span class="popup-label-tag">optional</span>
+        </div>
+
+        <div class="popup-card" role="group" aria-labelledby="section-s4">
+          <p class="popup-hint">
+            Specialises in <strong>idioms, phrasal verbs, and expressions</strong> that standard
+            dictionaries often miss (e.g. "kick the bucket", "on the fence"). Both the idiom and
+            vocabulary endpoints are included with a free account.
+          </p>
+          <p class="popup-hint">
+            <a href="https://www.phrases.com/api.php" target="_blank" rel="noopener noreferrer">
+              Get your free API key by signing up at STANDS4's Phrase API →
+            </a>
+          </p>
+
+          <div class="popup-field">
+            <label class="popup-label" for="s4-uid">User ID</label>
+            <input
+              type="text" id="s4-uid" class="popup-input popup-input--no-icon" placeholder="12345"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+              inputmode="numeric" aria-describedby="s4-uid-msg"
+            />
+            <div class="popup-field-msg" id="s4-uid-msg" role="status" aria-live="polite"></div>
+          </div>
+
+          <div class="popup-field">
+            <label class="popup-label" for="s4-token">Token</label>
+            <div class="popup-input-wrap">
+              <input
+                type="password" id="s4-token" class="popup-input"
+                placeholder="XXXXXXXXXXXXXXXXXXXX"
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                aria-describedby="s4-token-msg"
+              />
+              <button class="popup-eye-btn" type="button" data-target="s4-token"
+                aria-label="Show token" title="Show / hide">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            <div class="popup-field-msg" id="s4-token-msg" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+
+      </div><!-- /#panel-api-keys -->
+    </div><!-- /.popup-body -->
+
+    <!-- ─── Footer ─── -->
+    <footer class="popup-footer">
+      <div class="popup-actions">
+        <button id="btn-save" class="popup-btn-primary" type="button">Save Settings</button>
+
+        <div class="popup-clear-group">
+          <button id="btn-clear" class="popup-btn-secondary" type="button">Clear all</button>
+          <div class="popup-info-wrap">
+            <button
+              class="popup-info-btn"
+              type="button"
+              aria-label="What does Clear all do?"
+              aria-describedby="clear-tooltip"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13"
+                   fill="none" stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="8.01"/>
+                <line x1="12" y1="12" x2="12" y2="16"/>
+              </svg>
+            </button>
+            <div class="popup-tooltip" id="clear-tooltip" role="tooltip">
+              Removes all saved API keys (Merriam-Webster Collegiate &amp; Thesaurus and STANDS4) and resets lookup priority to <strong>Standard</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="popup-status" class="popup-status" role="status" aria-live="polite" aria-atomic="true"></div>
+    </footer>
+
+  </div><!-- /#view-main -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SETTINGS VIEW  — Lookup · Usage · Logs
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="view-settings" class="app-view" hidden>
+
+    <!-- ─── Header ─── -->
+    <header class="popup-header settings-header">
+      <button id="btn-back" class="popup-icon-btn" type="button" aria-label="Back to API Keys">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17"
+             fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <div class="popup-header-text">
+        <div class="popup-title">Settings</div>
+        <div class="popup-subtitle">Lookup · Usage · Logs</div>
+      </div>
+    </header>
+
+    <!-- ─── Tab Navigation ─── -->
+    <nav class="popup-tabs" role="tablist" aria-label="Settings sections">
+      <button
+        class="popup-tab is-active"
+        role="tab"
+        id="stab-btn-lookup"
+        data-stab="lookup"
+        aria-controls="spanel-lookup"
+        aria-selected="true"
+        tabindex="0"
+        type="button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        Lookup
+      </button>
+      <button
+        class="popup-tab"
+        role="tab"
+        id="stab-btn-usage"
+        data-stab="usage"
+        aria-controls="spanel-usage"
+        aria-selected="false"
+        tabindex="-1"
+        type="button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        API Usage
+      </button>
+      <button
+        class="popup-tab"
+        role="tab"
+        id="stab-btn-logs"
+        data-stab="logs"
+        aria-controls="spanel-logs"
+        aria-selected="false"
+        tabindex="-1"
+        type="button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Logs
+      </button>
+    </nav>
+
+    <!-- ─── Tab Panels ─── -->
+    <div class="popup-body">
+
+      <!-- Panel: Lookup Priority -->
+      <div id="spanel-lookup" class="popup-panel is-active" role="tabpanel" aria-labelledby="stab-btn-lookup">
+
+        <div class="popup-section-label" id="section-priority">Lookup Priority</div>
+
+        <div class="popup-card popup-card-priority" role="group" aria-labelledby="section-priority">
+          <p class="popup-hint">
+            Determines the order in which dictionary sources are consulted for each lookup.
+            When supplementary API credentials are configured, this setting governs whether
+            they are given precedence or reserved as a secondary fallback.
+          </p>
+
+          <div class="popup-radio-group" role="radiogroup" aria-label="Lookup priority">
+
+            <label class="popup-radio-row">
+              <input type="radio" name="priority" value="auto" class="popup-radio" checked />
+              <div class="popup-radio-body">
+                <span class="popup-radio-label">
+                  Standard
+                  <span class="popup-badge-rec" aria-label="Recommended">Recommended</span>
+                </span>
+                <span class="popup-radio-desc">
+                  Queries publicly available dictionary sources first. No API credentials
+                  are required to operate in this mode. When supplementary API keys are
+                  configured, they are consulted only if the primary sources return no
+                  result for the requested term.
+                </span>
+              </div>
+            </label>
+
+            <label class="popup-radio-row">
+              <input type="radio" name="priority" value="premium_first" class="popup-radio" />
+              <div class="popup-radio-body">
+                <span class="popup-radio-label">Enhanced</span>
+                <span class="popup-radio-desc">
+                  Queries your configured API sources first for every lookup, then falls
+                  back to publicly available sources if no result is returned. Provides
+                  the most comprehensive coverage when API credentials are active.
+                </span>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+      </div><!-- /#spanel-lookup -->
+
+      <!-- Panel: API Usage -->
+      <div id="spanel-usage" class="popup-panel" role="tabpanel" aria-labelledby="stab-btn-usage" hidden>
+
+        <div class="popup-section-label" id="section-usage">Today's API Calls</div>
+
+        <!-- Merriam-Webster meter -->
+        <div class="popup-card usage-card" role="group" aria-labelledby="section-usage-mw">
+          <div class="usage-card-header">
+            <span class="usage-api-name" id="section-usage-mw">Merriam-Webster</span>
+            <span class="usage-count-label">
+              <span id="usage-mw-count" aria-live="polite">0</span>
+              &nbsp;/&nbsp;
+              <span id="usage-mw-limit">1000</span>
+              <span class="usage-unit">calls today</span>
+            </span>
+          </div>
+          <div class="usage-bar-track" role="progressbar"
+               aria-labelledby="section-usage-mw"
+               aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div id="usage-mw-bar" class="usage-bar-fill usage-bar-ok"></div>
+          </div>
+
+          <div class="usage-limit-row">
+            <label class="popup-label" for="usage-mw-limit-input">
+              Daily limit
+              <span id="usage-mw-limit-cap" class="usage-limit-cap">(max&nbsp;1000)</span>
+            </label>
+            <div class="usage-slider-wrap">
+              <input
+                type="range"
+                id="usage-mw-limit-input"
+                class="usage-slider"
+                min="1" max="1000" step="1" value="1000"
+                aria-label="Merriam-Webster daily call limit"
+              />
+              <span id="usage-mw-limit-display" class="usage-slider-val">1000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STANDS4 meter -->
+        <div class="popup-card usage-card" role="group" aria-labelledby="section-usage-s4">
+          <div class="usage-card-header">
+            <span class="usage-api-name" id="section-usage-s4">STANDS4</span>
+            <span class="usage-count-label">
+              <span id="usage-s4-count" aria-live="polite">0</span>
+              &nbsp;/&nbsp;
+              <span id="usage-s4-limit">100</span>
+              <span class="usage-unit">calls today</span>
+            </span>
+          </div>
+          <div class="usage-bar-track" role="progressbar"
+               aria-labelledby="section-usage-s4"
+               aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div id="usage-s4-bar" class="usage-bar-fill usage-bar-ok"></div>
+          </div>
+
+          <div class="usage-limit-row">
+            <label class="popup-label" for="usage-s4-limit-input">
+              Daily limit
+              <span id="usage-s4-limit-cap" class="usage-limit-cap">(max&nbsp;100)</span>
+            </label>
+            <div class="usage-slider-wrap">
+              <input
+                type="range"
+                id="usage-s4-limit-input"
+                class="usage-slider"
+                min="1" max="100" step="1" value="100"
+                aria-label="STANDS4 daily call limit"
+              />
+              <span id="usage-s4-limit-display" class="usage-slider-val">100</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="popup-section-label" id="section-counters">Counters</div>
+
+        <div class="popup-card usage-counters-card" role="group" aria-labelledby="section-counters">
+          <button id="btn-reset-usage" class="popup-btn-secondary" type="button">
+            Reset today's counters to zero
+          </button>
+          <p class="popup-hint">
+            Counters reset automatically at midnight. They track calls made by this
+            extension only and are stored locally — nothing is sent anywhere.
+          </p>
+        </div>
+
+      </div><!-- /#spanel-usage -->
+
+      <!-- Panel: Logs -->
+      <div id="spanel-logs" class="popup-panel" role="tabpanel" aria-labelledby="stab-btn-logs" hidden>
+
+        <div class="popup-section-label" id="section-logs">Activity Log</div>
+
+        <div class="popup-card logs-card" role="log" aria-label="Activity log" aria-live="polite" aria-relevant="additions">
+          <div id="logs-list" class="logs-list">
+            <p class="logs-empty">No activity recorded yet.</p>
+          </div>
+        </div>
+
+        <div class="popup-card logs-actions-card">
+          <button id="btn-clear-logs" class="popup-btn-secondary" type="button">
+            Clear all logs
+          </button>
+          <p class="popup-hint">
+            Logs record every lookup — which API was tried, successes, failures, and fallbacks.
+            <span class="logs-hint-red">Entries in red</span> indicate a failure or unexpected fallback.
+          </p>
+        </div>
+
+      </div><!-- /#spanel-logs -->
+
+    </div><!-- /.popup-body -->
+
+    <!-- ─── Footer ─── -->
+    <footer class="popup-footer">
+      <div class="popup-actions">
+        <button id="btn-save-settings" class="popup-btn-primary" type="button">Save Settings</button>
+      </div>
+      <div id="settings-status" class="popup-status" role="status" aria-live="polite" aria-atomic="true"></div>
+    </footer>
+
+  </div><!-- /#view-settings -->
+
+  <script src="shared_constants.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
