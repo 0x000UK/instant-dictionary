@@ -22,14 +22,19 @@ It works on pretty much any page — articles, Wikipedia, web PDFs, local docume
 
 **Right-click (Context Menu)** → Select text, right-click, and choose **"Define '...'"**.
 
-**Keyboard** → Make a selection any way you like, then press the designated hotkey (**Alt+Q**) to trigger the lookup. (**Note: Hotkey(Alt+Q) and 'double-click on a word to trigger the tooltip' will not work in Reader Mode (`about:reader`). To define a word in Reader Mode, highlight the text, right click to open Context Menu & click "Define".**)
+**Keyboard** → Make a selection any way you like, then press the designated hotkey (**Alt+Q**) to trigger the lookup. (**Note: The Alt+Q hotkey and double-clicking will not work in Reader Mode (`about:reader`). To define a word in Reader Mode, highlight the text, right-click to open the Context Menu, and click "Define".**)
 
 **Toggle Sidebar & Search** → Press **Alt+W** (Mac: **Cmd+W**) to instantly open or close the Instant Dictionary sidebar. From here, you can manage local files or use the dedicated search bar to look up words manually.
 <br><br><span style="color: #d32f2f; font-size: 1.15em; font-weight: bold;">⚠️ IMPORTANT NOTE: A brief visual flash of the dictionary sidebar opening and closing upon browser launch is expected behavior. This occurs exclusively if Firefox was closed while the sidebar was active, and is an unavoidable artifact of Firefox's native Session Restore sequence.</span>
 
-**Close it** → click the × button, click anywhere outside the tooltip, or press **Alt+Q** or **Escape**.
+---
 
-The tooltip auto-closes after 6 seconds so it won't get in your way if you ignore it. Hovering over it pauses the countdown, if you want to take your time reading the meaning(s).
+## How to close the UI
+
+**Close the Tooltip** → Click the **×** button on the tooltip header, click anywhere outside the tooltip, press **Escape**, or press **Alt+Q** (when text is highlighted). 
+*(Note: The tooltip automatically closes after 6 seconds so it won't get in your way. Hovering your cursor over it pauses the countdown.)*
+
+**Close the Sidebar** → Press **Alt+W** (Mac: **Cmd+W**) to toggle it off via hotkey, or click the native **×** button on the Firefox sidebar header. Alternatively, you can close it from the sidebar dropdown menu.
 
 ---
 
@@ -50,23 +55,26 @@ Once the sidebar is open:
 1. Click the 📂 **Open Local Files** button at the top.
 2. Drag and drop your document into the **Dropzone**, or click it to browse your computer.
 3. The file opens seamlessly with full dictionary support. *(Note: PDF is fully supported; EPUB and DOCX viewers are coming soon).*
+
 ---
 
-## Recent Files & Memory Management:
+## Recent Files & Memory Management
 
 1. **Bookshelf Storage:** Your last 5 opened local files are saved securely inside the extension's database for quick, 1-click access. Older files are automatically evicted to save space.
 2. **Smart Tab Routing:** Every unique document opens in its own tab. If you click a file in the sidebar that is already open, the extension will instantly pull your browser focus to that existing tab, rather than creating an annoying duplicate.
 3. **Session Resumption:** If you close Firefox and reopen it, the document will load and instantly jump to your exact last-read page and scroll position!
 
+---
+
 ## What shows up in the tooltip
 
 - The word or phrase you looked up
-- Phonetic pronunciation where available (e.g. `/ˈwɜːd/`)
+- Phonetic pronunciation where available (e.g., `/ˈwɜːd/`)
 - Part of speech — noun, verb, adjective, etc.
 - Up to 3 definitions per part of speech, across up to 3 parts of speech
 - Example sentences where available
 - Synonyms and antonyms (Free Dictionary source)
-- A **🔊 Listen** button for audio pronunciation playback (Merriam-Webster sources only)
+- A **🔊 Listen** button for audio pronunciation playback (Available via Merriam-Webster and Free Dictionary sources)
 - A **⇄ Thesaurus / ⇄ Collegiate** toggle button when both Merriam-Webster keys are configured — lets you switch between the Collegiate and Thesaurus results for the same word without a new lookup
 - The source the definition was pulled from
 
@@ -80,17 +88,17 @@ The extension tries sources in sequence and stops at the first one that returns 
 
 | # | Source | Best for |
 |---|---|---|
-| 1 | **[Free Dictionary API](https://dictionaryapi.dev/)** | Common English words — clean structured data with phonetics, examples, synonyms, antonyms |
-| 2 | **[Wiktionary](https://en.wiktionary.org/)** | Broader coverage — technical terms, loanwords, archaic words, proper nouns |
+| 1 | **[Wiktionary](https://en.wiktionary.org/)** | Broader coverage — technical terms, loanwords, archaic words, proper nouns |
+| 2 | **[Free Dictionary API](https://dictionaryapi.dev/)** | Common English words — clean structured data with phonetics, examples, synonyms, antonyms, and audio |
 
 **Optional premium sources:**
 
 | # | Source | Best for |
 |---|---|---|
-| 3 | **[STANDS4 Vocabulary API](https://www.stands4.com/)** | Single-word definitions with part-of-speech, example, and pronunciation |
-| 4 | **[STANDS4 Phrases API](https://www.stands4.com/)** | Idioms, phrasal verbs, and multi-word expressions (e.g. "kick the bucket", "on the fence") — only called for multi-word selections |
-| 5 | **[Merriam-Webster Collegiate](https://dictionaryapi.com/)** | Authoritative single-word definitions + **audio pronunciation**. Free accounts: up to 1,000 lookups/day |
-| 6 | **[Merriam-Webster Thesaurus](https://dictionaryapi.com/)** | Synonyms and related words. Complements the Collegiate key; shares the same daily limit counter |
+| 3 | **[Merriam-Webster Collegiate / Learner's](https://dictionaryapi.com/)** | Authoritative single-word definitions + **audio pronunciation**. Free accounts: up to 1,000 lookups/day |
+| 4 | **[Merriam-Webster Thesaurus](https://dictionaryapi.com/)** | Synonyms and related words. Complements the Collegiate key; shares the same daily limit counter |
+| 5 | **[STANDS4 Vocabulary API](https://www.stands4.com/)** | Absolute last-resort fallback for single words. |
+| 6 | **[STANDS4 Phrases API](https://www.stands4.com/)** | Absolute last-resort fallback. Idioms, phrasal verbs, and colloquialisms. |
 
 If no source returns a result, the tooltip says so explicitly rather than silently showing nothing. If a configured API key was rejected or over quota, that detail is surfaced in the tooltip so you know why the fallback kicked in.
 
@@ -98,20 +106,20 @@ If no source returns a result, the tooltip says so explicitly rather than silent
 
 ## Optional API keys
 
-The extension works out of the box with no accounts or setup. The free sources cover most everyday words well. API keys unlock audio pronunciation, richer single-word entries, and idiom coverage.
+The extension works out of the box with no accounts or setup. The free sources cover most everyday words well. API keys unlock native audio pronunciations, authoritative single-word entries, and fallback idiom coverage.
 
 Keys are saved in the extension's popup (click the toolbar icon).
 
 ### Merriam-Webster
 
-MW issues **two separate keys** — one per API product. Each is a UUID in the format `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`.
+Connecting Merriam-Webster unlocks **native audio pronunciations** and comprehensive definitions. As the primary engine, it seamlessly handles most lookup requirements. MW issues **two separate keys** — one per API product. Each is a UUID in the format `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`.
 
 | Key | What it unlocks |
 |---|---|
-| **Collegiate Dictionary API Key** | Authoritative definitions + **🔊 audio pronunciation playback** |
-| **Thesaurus Dictionary API Key** | Synonyms and related words; enables the ⇄ toggle button |
+| **Collegiate / Learner's Dictionary API Key** | Authoritative definitions + **🔊 native audio pronunciation playback** |
+| **Thesaurus Dictionary API Key** | Synonyms and related words; enables the in-tooltip ⇄ toggle button |
 
-→ [Register for free API keys](https://dictionaryapi.com/register/index) — create separate accounts (or separate products) for Collegiate and Thesaurus.
+→ [Register for free API keys](https://dictionaryapi.com/register/index) — create separate accounts (or separate products) for Collegiate/Learner's and Thesaurus.
 
 You can save either or both. Saving only the Collegiate key gives you definitions and audio. Saving both unlocks the in-tooltip ⇄ toggle so you can flip between dictionary and thesaurus views for the same word.
 
@@ -119,7 +127,7 @@ You can save either or both. Saving only the Collegiate key gives you definition
 
 ### STANDS4
 
-Adds richer single-word entries and, more importantly, coverage for **idioms and multi-word expressions** that standard dictionaries miss.
+An **absolute last-resort fallback engine**. Because STANDS4 is crowdsourced, it can contain noise and obscure definitions that standard dictionaries omit, but it is highly permissive and specializes in idioms, phrasal verbs, and colloquialisms. To ensure accuracy, it is *only* queried as a final attempt if all primary and public dictionaries fail to return a definition.
 
 → [Get your free API key at STANDS4's Phrase API](https://www.phrases.com/api.php) — your **User ID** (numeric) and **Token** (alphanumeric) are on your profile page after login. Both fields are required; entering only one is flagged as an error.
 
@@ -127,12 +135,12 @@ Adds richer single-word entries and, more importantly, coverage for **idioms and
 
 ## Lookup Priority
 
-Configurable in Settings → **Lookup** tab. Controls the source order when API keys are configured.
+Configurable in Settings → **Lookup** tab. Determines the execution sequence of dictionary sources for each lookup.
 
 | Setting | Behaviour |
 |---|---|
-| **Standard (Recommended)** *(default)* | Queries publicly available sources first. API credentials are consulted only if primary sources return no result. |
-| **Enhanced** | Queries your configured API sources first, then falls back to public sources. |
+| **Standard (Recommended)** *(default)* | Queries public sources first. When configured, Merriam-Webster serves as the primary fallback, and STANDS4 acts strictly as a final, last-resort attempt. |
+| **Enhanced** | Executes Merriam-Webster first (when configured), failing over to public sources. STANDS4 (when configured) remains quarantined as the absolute final safety net. |
 
 The source sequence is printed to the **Logs** tab on every lookup so you can see exactly what was tried and in what order.
 
@@ -202,6 +210,7 @@ Logs are capped at 200 entries (oldest evicted first) and persist across popup o
 |---|---|
 | **`<all_urls>`** | So the extension works on any site, not just a hardcoded list |
 | **`storage`** | To save your API keys, priority setting, daily limits, and usage counters locally in the browser |
+| **`tabs`** | To detect Reader Mode during hotkey usage and instantly route you to existing tabs when opening local PDFs |
 | **`contextMenus`** / **`menus`** | To add the "Define '...'" option to the right-click menu |
 | **`webRequest`** / **`webRequestBlocking`** | To automatically intercept web PDFs and route them to the dictionary-enabled custom viewer |
 

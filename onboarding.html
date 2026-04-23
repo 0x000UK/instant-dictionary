@@ -178,7 +178,7 @@
             <strong>Firefox Reader Mode Limitations:</strong> Within Firefox's Reader Mode (<code>about:reader</code>), double-clicking and keyboard shortcuts are restricted. To lookup a word in Reader Mode, you must highlight the text, open the right-click Context Menu, and select <strong>"Define"</strong>.
         </div>
 
-        <p><strong>Dismissing the Tooltip:</strong> By default, the tooltip auto-closes after 6 seconds to stay out of your way. Hovering your cursor over the tooltip will pause this countdown. You can also dismiss it immediately by clicking the × button, clicking anywhere outside the tooltip, or pressing <kbd>Alt+Q</kbd> or <kbd>Escape</kbd>.</p>
+        <p><strong>Dismissing the UI:</strong> The Tooltip automatically closes after 6 seconds to stay out of your way (hovering pauses this countdown). You can close the Tooltip manually by clicking the × button on its header, clicking anywhere outside of it, pressing <kbd>Escape</kbd>, or pressing <kbd>Alt+Q</kbd>. To close the Sidebar, press <kbd>Alt+W</kbd> again or click the native × button on the Firefox sidebar header.</p>
 
         <h2>Document Viewing: PDFs & Local Files</h2>
         <p>Modern browsers implement strict security policies that prevent extensions from operating on local files or within native PDF viewers. To bypass this limitation, Instant Dictionary includes an integrated, secure document viewer.</p>
@@ -191,7 +191,7 @@
         <p>To make reading local files effortless, the extension remembers your five most recently opened documents for quick access, automatically switches you to the correct tab if a file is already open to prevent clutter, and saves your exact page and scroll position so you can pick up exactly where you left off after restarting your browser.</p>
 
         <h2>Sources & API Configuration</h2>
-        <p>Instant Dictionary operates out-of-the-box utilizing publicly available sources. However, users can unlock premium features—such as audio pronunciations and extensive idiom coverage—by configuring free API keys within the extension's popup menu.</p>
+        <p>Instant Dictionary operates out-of-the-box utilizing publicly available sources. However, users can unlock premium features—such as native audio pronunciations and extensive idiom coverage—by configuring free API keys within the extension's popup menu.</p>
         
         <table>
             <thead>
@@ -203,11 +203,11 @@
             <tbody>
                 <tr>
                     <td><strong>Free Dictionary API & Wiktionary</strong></td>
-                    <td>Default sources requiring zero setup. Delivers clean, structured data for common terminology, proper nouns, and technical jargon.</td>
+                    <td>Default sources requiring zero setup. Delivers clean, structured data for common terminology, proper nouns, technical jargon, and includes free audio.</td>
                 </tr>
                 <tr>
-                    <td><strong>Merriam-Webster Collegiate</strong></td>
-                    <td>Premium authoritative definitions featuring a <strong>🔊 Listen</strong> button for audio pronunciation.</td>
+                    <td><strong>Merriam-Webster Collegiate / Learner's</strong></td>
+                    <td>The superior primary fallback engine. Provides authoritative definitions and features a <strong>🔊 Listen</strong> button for native audio pronunciation.</td>
                 </tr>
                 <tr>
                     <td><strong>Merriam-Webster Thesaurus</strong></td>
@@ -215,7 +215,7 @@
                 </tr>
                 <tr>
                     <td><strong>STANDS4 Vocabulary & Phrases</strong></td>
-                    <td>Enhances single-word entries and provides deep coverage for idioms, phrasal verbs, and multi-word expressions (e.g., "on the fence").</td>
+                    <td>An absolute last-resort fallback. Because it is crowdsourced, it can contain noise, but it specializes in idioms, phrasal verbs, and colloquial expressions.</td>
                 </tr>
             </tbody>
         </table>
@@ -223,8 +223,8 @@
         <h3>Lookup Priority Options</h3>
         <p>You can fine-tune query behavior via the Settings menu:</p>
         <ul>
-            <li><strong>Standard (Default):</strong> Optimizes API usage by querying publicly available sources first, falling back to API credentials only if necessary.</li>
-            <li><strong>Enhanced:</strong> Prioritizes your configured API keys, resorting to public sources only if the premium APIs fail to return a result.</li>
+            <li><strong>Standard (Default):</strong> Queries public sources first. When configured, Merriam-Webster serves as the primary fallback, and STANDS4 acts strictly as a final, last-resort attempt.</li>
+            <li><strong>Enhanced:</strong> Executes Merriam-Webster first (when configured), failing over to public sources. STANDS4 (when configured) remains quarantined as the absolute final safety net.</li>
         </ul>
 
         <h2>Usage Tracking & Activity Logs</h2>
