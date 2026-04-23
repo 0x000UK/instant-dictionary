@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Instant Dictionary</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --text-muted: #555555;
+            --accent-color: #0060df;
+            --accent-hover: #003eaa;
+            --border-color: #e0e0e0;
+            --code-bg: #f4f4f4;
+            --alert-bg: #fff3cd;
+            --alert-border: #ffe69c;
+            --alert-text: #664d03;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1c1b22;
+                --text-color: #fbfbfe;
+                --text-muted: #aaaaaa;
+                --accent-color: #00ddff;
+                --accent-hover: #80ebff;
+                --border-color: #38383d;
+                --code-bg: #2b2a33;
+                --alert-bg: #332701;
+                --alert-border: #664d03;
+                --alert-text: #ffecb5;
+            }
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 3rem 2rem;
+        }
+        h1, h2, h3 {
+            color: var(--text-color);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3rem;
+        }
+        h3 {
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+        }
+        p, ul, li {
+            font-size: 1.05rem;
+        }
+        ul, ol {
+            padding-left: 1.5rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+        kbd, code {
+            background-color: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .alert {
+            background-color: var(--alert-bg);
+            color: var(--alert-text);
+            border: 1px solid var(--alert-border);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+        }
+        .alert-danger {
+            background-color: #fff5f5;
+            color: #d32f2f;
+            border: 2px solid #d32f2f;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        @media (prefers-color-scheme: dark) {
+            .alert-danger {
+                background-color: #2b1111;
+                color: #ff6b6b;
+                border: 2px solid #ff6b6b;
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        th {
+            background-color: var(--code-bg);
+        }
+        .btn-primary {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 2rem;
+            transition: background-color 0.2s ease, outline 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+        /* ARCHITECTURAL ADDITION: Strict Accessibility Focus States */
+        .btn-primary:focus-visible {
+            outline: 3px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+        .btn-container {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .muted {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <h1>Welcome to Instant Dictionary</h1>
+        <p>Experience uninterrupted reading. Instant Dictionary delivers definitions for unfamiliar words and phrases directly inline, entirely eliminating the need for context-switching, new tabs, or external searches. The lookup tooltip appears instantly alongside your selection and automatically dismisses itself. It is fully compatible with standard webpages, articles, documentation, web PDFs, and local documents.</p>
+
+        <div class="alert-danger">
+            ⚠️ IMPORTANT NOTE: A brief visual flash of the dictionary sidebar opening and closing upon browser launch is expected behavior. This occurs exclusively if Firefox was closed while the sidebar was active, and is an unavoidable artifact of Firefox's native Session Restore sequence.
+        </div>
+
+        <h2>Trigger Methods</h2>
+        <p>The extension is designed for seamless activation. Choose the method that best fits your workflow:</p>
+        <ul>
+            <li><strong>Double-Click:</strong> Select any single word to immediately view its definition.</li>
+            <li><strong>Click and Drag:</strong> Highlight a word or phrase to reveal a contextual <strong>Define</strong> pill. Clicking this pill prevents unwanted lookups when you simply intend to copy text.</li>
+            <li><strong>Context Menu:</strong> Highlight your text, right-click, and select <strong>"Define '...'"</strong> from the native browser menu.</li>
+            <li><strong>Keyboard Shortcut:</strong> Highlight text and press <kbd>Alt+Q</kbd> to launch the dictionary instantly.</li>
+            <li><strong>Sidebar Access & Search:</strong> Press <kbd>Alt+W</kbd> (Mac: <kbd>Cmd+W</kbd>) at any time to toggle the Instant Dictionary sidebar. From here, you can manage local files or use the dedicated search bar to manually look up any word.</li>
+        </ul>
+        
+        <div class="alert">
+            <strong>Firefox Reader Mode Limitations:</strong> Within Firefox's Reader Mode (<code>about:reader</code>), double-clicking and keyboard shortcuts are restricted. To lookup a word in Reader Mode, you must highlight the text, open the right-click Context Menu, and select <strong>"Define"</strong>.
+        </div>
+
+        <p><strong>Dismissing the Tooltip:</strong> By default, the tooltip auto-closes after 6 seconds to stay out of your way. Hovering your cursor over the tooltip will pause this countdown. You can also dismiss it immediately by clicking the × button, clicking anywhere outside the tooltip, or pressing <kbd>Alt+Q</kbd> or <kbd>Escape</kbd>.</p>
+
+        <h2>Document Viewing: PDFs & Local Files</h2>
+        <p>Modern browsers implement strict security policies that prevent extensions from operating on local files or within native PDF viewers. To bypass this limitation, Instant Dictionary includes an integrated, secure document viewer.</p>
+        <ul>
+            <li><strong>Web PDFs:</strong> The extension actively intercepts PDF links clicked on the web. Before the default viewer can open, the document is routed into our custom viewer, ensuring the dictionary is fully initialized and ready the moment the document renders.</li>
+            <li><strong>Local Documents:</strong> Press <kbd>Alt+W</kbd> (Mac: <kbd>Cmd+W</kbd>) to open the sidebar. Click the <strong>Open Local Files</strong> button and either browse or drag-and-drop your document. Full support is currently available for PDFs, with EPUB and DOCX capabilities in active development.</li>
+        </ul>
+
+        <h3>Seamless File Management</h3>
+        <p>To make reading local files effortless, the extension remembers your five most recently opened documents for quick access, automatically switches you to the correct tab if a file is already open to prevent clutter, and saves your exact page and scroll position so you can pick up exactly where you left off after restarting your browser.</p>
+
+        <h2>Sources & API Configuration</h2>
+        <p>Instant Dictionary operates out-of-the-box utilizing publicly available sources. However, users can unlock premium features—such as audio pronunciations and extensive idiom coverage—by configuring free API keys within the extension's popup menu.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Source Integrations</th>
+                    <th>Capabilities & Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Free Dictionary API & Wiktionary</strong></td>
+                    <td>Default sources requiring zero setup. Delivers clean, structured data for common terminology, proper nouns, and technical jargon.</td>
+                </tr>
+                <tr>
+                    <td><strong>Merriam-Webster Collegiate</strong></td>
+                    <td>Premium authoritative definitions featuring a <strong>🔊 Listen</strong> button for audio pronunciation.</td>
+                </tr>
+                <tr>
+                    <td><strong>Merriam-Webster Thesaurus</strong></td>
+                    <td>Provides synonyms and activates the <strong>⇄</strong> toggle button inside the tooltip, allowing seamless switching between dictionary and thesaurus results.</td>
+                </tr>
+                <tr>
+                    <td><strong>STANDS4 Vocabulary & Phrases</strong></td>
+                    <td>Enhances single-word entries and provides deep coverage for idioms, phrasal verbs, and multi-word expressions (e.g., "on the fence").</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Lookup Priority Options</h3>
+        <p>You can fine-tune query behavior via the Settings menu:</p>
+        <ul>
+            <li><strong>Standard (Default):</strong> Optimizes API usage by querying publicly available sources first, falling back to API credentials only if necessary.</li>
+            <li><strong>Enhanced:</strong> Prioritizes your configured API keys, resorting to public sources only if the premium APIs fail to return a result.</li>
+        </ul>
+
+        <h2>Usage Tracking & Activity Logs</h2>
+        <p>If you choose to configure premium API keys, the extension provides built-in tools within the popup menu to help you effortlessly monitor your daily search limits, set personalized usage caps, and view a brief history of your recent lookups.</p>
+
+        <div class="btn-container">
+            <button id="btn-close" class="btn-primary" type="button" aria-label="Close this tab and start browsing">Close Tab & Start Browsing</button>
+        </div>
+    </main>
+    <script src="onboarding.js"></script>
+</body>
+</html>

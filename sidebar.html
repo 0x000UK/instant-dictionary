@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Instant Dictionary</title>
+  <link rel="stylesheet" href="content.css" />
+  <style>
+    /* ─── Native Firefox Sidebar Integration ──────────────────────────────── */
+    :root {
+      --sidebar-bg:      #ffffff;
+      --sidebar-text:    #1c1c1c;
+      --sidebar-subtext: #6e6e6e;
+      --sidebar-border:  #e0e0e0;
+
+      /* Map content.css variables to sidebar theme */
+      --dict-bg:          var(--sidebar-bg);
+      --dict-text:        var(--sidebar-text);
+      --dict-subtext:     var(--sidebar-subtext);
+      --dict-border:      var(--sidebar-border);
+      --dict-divider:     var(--sidebar-border);
+      --dict-accent-bg:   #f5f5f5;
+      --dict-accent-text: #333333;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --sidebar-bg:       #2b2a33;
+        --sidebar-text:     #fbfbfe;
+        --sidebar-subtext:  #aaaaaa;
+        --sidebar-border:   #38383d;
+        --dict-accent-bg:   #42414d;
+        --dict-accent-text: #e0e0e0;
+      }
+    }
+
+    body {
+      font-family:      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--sidebar-bg);
+      color:            var(--sidebar-text);
+      margin:           0;
+      padding:          16px;
+      line-height:      1.5;
+      overflow-x:       hidden;
+    }
+
+    html, body {
+      min-height: 100vh;
+      margin:     0;
+    }
+
+    /* ─── View Toggling ───────────────────────────────────────────────────── */
+    .sidebar-view {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 32px);
+    }
+    .sidebar-view[hidden] {
+      display: none !important;
+    }
+
+    /* ─── Countdown Bar ───────────────────────────────────────────────────── */
+    #dict-tooltip-countdown {
+      position:         fixed;
+      bottom:           0;
+      left:             0;
+      width:            100%;
+      height:           3px;
+      background:       var(--dict-accent-text);
+      transform-origin: left;
+      transform:        scaleX(0);
+      z-index:          100;
+    }
+    body.dict-counting #dict-tooltip-countdown {
+      transform:  scaleX(1);
+      animation:  dict-countdown var(--dict-auto-close-ms, 6000ms) linear forwards;
+    }
+    /* Note: CSS hover pausing removed. Handled strictly via JS to prevent IPC latency issues. */
+
+    /* ─── Dictionary Header Layout ────────────────────────────────────────── */
+    #sidebar-header {
+      display:        flex;
+      flex-direction: column;
+      border-bottom:  1px solid var(--sidebar-border);
+      padding-bottom: 12px;
+      margin-bottom:  16px;
+    }
+    .sidebar-header-top {
+      display:         flex;
+      justify-content: space-between;
+      align-items:     flex-start;
+      margin-bottom:   4px;
+    }
+    .sidebar-header-actions {
+      display:     flex;
+      align-items: flex-start;
+      gap:         6px;
+      flex-shrink: 0;
+    }
+    #dict-tooltip-word {
+      font-size:   22px;
+      font-weight: 700;
+      margin:      0;
+      word-break:  break-word;
+    }
+    #dict-tooltip-phonetic {
+      font-size:   14px;
+      color:       var(--sidebar-subtext);
+      font-family: "Lucida Sans Unicode", "Arial Unicode MS", sans-serif;
+    }
+
+    /* ─── Header Buttons ──────────────────────────────────────────────────── */
+    #dict-mw-switch-btn {
+      background:    var(--dict-accent-bg);
+      color:         var(--dict-accent-text);
+      border:        1px solid var(--sidebar-border);
+      border-radius: 4px;
+      padding:       4px 8px;
+      font-size:     11px;
+      cursor:        pointer;
+      display:       none; 
+    }
+    #dict-mw-switch-btn:hover:not(:disabled) { filter: brightness(0.95); }
+    #dict-mw-switch-btn:disabled             { opacity: 0.5; cursor: not-allowed; }
+
+    #idb-open-trigger-btn {
+      background:      var(--dict-accent-bg);
+      color:           var(--dict-accent-text);
+      border:          1px solid var(--sidebar-border);
+      border-radius:   4px;
+      padding:         4px 7px;
+      font-size:       13px;
+      line-height:     1;
+      cursor:          pointer;
+      transition:      background-color 0.15s, border-color 0.15s, transform 0.1s;
+      flex-shrink:     0;
+      display:         inline-flex;
+      align-items:     center;
+      justify-content: center;
+    }
+    #idb-open-trigger-btn:hover {
+      filter: brightness(0.95);
+    }
+    #idb-open-trigger-btn.idb-trigger--drag-active {
+      background-color: var(--dict-accent-text);
+      color:            var(--sidebar-bg);
+      border-color:     var(--dict-accent-text);
+      transform:        scale(1.1);
+    }
+
+    /* ─── Search Bar ──────────────────────────────────────────────────────── */
+    #dict-search-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    #dict-search-input {
+      flex: 1;
+      background: var(--dict-bg);
+      color: var(--sidebar-text);
+      border: 1px solid var(--sidebar-border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #dict-search-input:focus {
+      border-color: var(--dict-accent-text);
+    }
+    #dict-search-submit {
+      background: var(--dict-accent-bg);
+      color: var(--dict-accent-text);
+      border: 1px solid var(--sidebar-border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #dict-search-submit:hover {
+      filter: brightness(0.95);
+    }
+    #dict-search-submit svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ─── Dictionary Body ─────────────────────────────────────────────────── */
+    #dict-tooltip-body {
+      font-size:      14px;
+      padding-bottom: 16px;
+    }
+    #dict-tooltip-source {
+      font-size:   11px;
+      color:       var(--sidebar-subtext);
+      border-top:  1px solid var(--sidebar-border);
+      padding-top: 12px;
+      margin-top:  auto;
+    }
+    .sidebar-instruction {
+      font-size:  13px;
+      color:      var(--sidebar-subtext);
+      font-style: italic;
+    }
+
+    /* ─── Local Files View Header ─────────────────────────────────────────── */
+    .lf-view-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+    .lf-back-btn {
+      background: transparent;
+      color: var(--sidebar-subtext);
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .lf-back-btn:hover {
+      background: var(--dict-accent-bg);
+      color: var(--sidebar-text);
+    }
+    .lf-view-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--sidebar-text);
+    }
+
+    /* ─── Local Files Cards ───────────────────────────────────────────────── */
+    .lf-card {
+      background: var(--dict-bg);
+      border: 1px solid var(--sidebar-border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    @media (prefers-color-scheme: dark) {
+      .lf-card { box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+    }
+    .lf-card-header {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: var(--sidebar-text);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .lf-explanation {
+      font-size: 13px;
+      color: var(--sidebar-subtext);
+      margin: 0 0 16px 0;
+      line-height: 1.4;
+    }
+
+    /* ─── Drop Zone ───────────────────────────────────────────────────────── */
+    #idb-dropzone {
+      border:         1.5px dashed var(--sidebar-border);
+      border-radius:  8px;
+      padding:        14px 10px;
+      text-align:     center;
+      cursor:         pointer;
+      user-select:    none;
+      transition:     background-color 0.15s, border-color 0.15s;
+      outline-offset: 2px;
+    }
+    #idb-dropzone:hover,
+    #idb-dropzone:focus-visible {
+      background-color: var(--dict-accent-bg);
+      border-color:     var(--dict-accent-text);
+    }
+    #idb-dropzone.idb-dropzone--active {
+      background-color: var(--dict-accent-bg);
+      border-color:     var(--dict-accent-text);
+    }
+    #idb-dropzone.idb-dropzone--processing {
+      cursor:  not-allowed;
+      opacity: 0.65;
+    }
+    .idb-dropzone-icon {
+      font-size:     22px;
+      line-height:   1;
+      display:       block;
+      margin-bottom: 5px;
+    }
+    .idb-dropzone-primary {
+      font-size:   12.5px;
+      font-weight: 600;
+      color:       var(--sidebar-text);
+      margin:      0 0 2px;
+    }
+    .idb-dropzone-secondary {
+      font-size: 11px;
+      color:     var(--sidebar-subtext);
+      margin:    0;
+    }
+
+    /* ─── Inline Status Message ──── */
+    #idb-modal-status {
+      display:       none;
+      font-size:     12px;
+      border-radius: 4px;
+      padding:       6px 8px;
+      line-height:   1.4;
+      margin-top:    10px;
+      overflow-wrap: anywhere;
+      word-break:    break-word;
+    }
+
+    #idb-modal-status.idb-status--loading { display: block; background-color: var(--dict-accent-bg); color: var(--sidebar-text); }
+    #idb-modal-status.idb-status--success { display: block; background-color: #d4edda; color: #155724; }
+    #idb-modal-status.idb-status--info    { display: block; background-color: #d1ecf1; color: #0c5460; }
+    #idb-modal-status.idb-status--error   { display: block; background-color: #f8d7da; color: #721c24; }
+    
+    @media (prefers-color-scheme: dark) {
+      #idb-modal-status.idb-status--success { background-color: #1a3d27; color: #75d49b; }
+      #idb-modal-status.idb-status--info    { background-color: #0d3040; color: #7fd4e8; }
+      #idb-modal-status.idb-status--error   { background-color: #3d1a1e; color: #f08090; }
+    }
+
+    /* ─── Recent Files List ───────────────────────────────────────────────── */
+    #idb-recent-list {
+      display:        flex;
+      flex-direction: column;
+      gap:            2px;
+    }
+    .idb-empty {
+      font-size:  12.5px;
+      color:      var(--sidebar-subtext);
+      font-style: italic;
+      margin:     4px 0 0;
+    }
+    .idb-file-row {
+      display:       flex;
+      align-items:   center;
+      gap:           8px;
+      padding:       7px 8px;
+      border-radius: 6px;
+      border:        1px solid transparent;
+      transition:    background-color 0.12s, border-color 0.12s;
+    }
+    .idb-file-row:hover {
+      background-color: var(--dict-accent-bg);
+      border-color:     var(--sidebar-border);
+    }
+    .idb-file-icon {
+      font-size:   18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .idb-file-meta {
+      flex:           1;
+      min-width:      0;
+      display:        flex;
+      flex-direction: column;
+      gap:            1px;
+    }
+    .idb-file-name {
+      font-size:     12.5px;
+      font-weight:   600;
+      color:         var(--sidebar-text);
+      white-space:   nowrap;
+      overflow:      hidden;
+      text-overflow: ellipsis;
+    }
+    .idb-file-info {
+      font-size: 11px;
+      color:     var(--sidebar-subtext);
+    }
+    .idb-file-actions {
+      display:     flex;
+      align-items: center;
+      gap:         4px;
+      flex-shrink: 0;
+    }
+    .idb-btn-open {
+      background:    var(--dict-accent-bg);
+      color:         var(--dict-accent-text);
+      border:        1px solid var(--sidebar-border);
+      border-radius: 4px;
+      padding:       3px 9px;
+      font-size:     11px;
+      font-weight:   600;
+      cursor:        pointer;
+      transition:    filter 0.12s;
+      white-space:   nowrap;
+    }
+    .idb-btn-open:hover    { filter: brightness(0.92); }
+    .idb-btn-open:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .idb-btn-delete {
+      background:    transparent;
+      color:         var(--sidebar-subtext);
+      border:        1px solid transparent;
+      border-radius: 4px;
+      padding:       3px 6px;
+      font-size:     12px;
+      cursor:        pointer;
+      line-height:   1;
+      transition:    background-color 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .idb-btn-delete:hover {
+      background-color: #f8d7da;
+      color:            #721c24;
+      border-color:     #f5c6cb;
+    }
+    @media (prefers-color-scheme: dark) {
+      .idb-btn-delete:hover {
+        background-color: #3d1a1e;
+        color:            #f08090;
+        border-color:     #5a2530;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="view-dictionary" class="sidebar-view">
+    <div id="sidebar-header">
+      <div class="sidebar-header-top">
+        <div id="dict-tooltip-word">Dictionary</div>
+        <div class="sidebar-header-actions">
+          <button id="dict-mw-switch-btn" type="button" aria-label="Switch dictionary"></button>
+          <button id="idb-open-trigger-btn" type="button" aria-label="Open Local Files" title="Open local file (PDF, EPUB, DOCX)">📂</button>
+        </div>
+      </div>
+      <div id="dict-tooltip-phonetic"></div>
+
+      <div id="dict-search-container">
+        <input type="text" id="dict-search-input" placeholder="Search dictionary..." aria-label="Search dictionary" />
+        <button id="dict-search-submit" type="button" aria-label="Search" title="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <div id="dict-sidebar-scroll-area">
+     <div id="dict-tooltip-body">
+        <p class="sidebar-instruction">
+          Highlight text and press <kbd>Alt</kbd>+<kbd>Q</kbd> (or <kbd>Cmd</kbd>+<kbd>Q</kbd> on Mac), 
+          right-click and select "Define", or use the search bar above to look up a word.
+        </p>
+      </div>
+      <div id="dict-tooltip-source"></div>
+    </div>
+  </div>
+
+  <div id="view-local-files" class="sidebar-view" hidden>
+    
+    <div class="lf-view-header">
+      <button id="lf-back-btn" class="lf-back-btn" aria-label="Back to Dictionary">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h2 class="lf-view-title">Local Files</h2>
+    </div>
+
+    <div class="lf-card">
+      <h3 class="lf-card-header">Reading Local Documents</h3>
+      <p class="lf-explanation">
+        To enable Instant Dictionary lookups within your own documents, we use a dedicated integrated reader. Because the browser naturally protects local files from being accessed automatically, you must load them here manually. Once added, your files open seamlessly with full dictionary support and are saved below for quick one-click access.
+      </p>
+
+      <div id="idb-dropzone" role="button" tabindex="0" aria-label="Drop a file here or press Enter to browse — PDF, EPUB, DOCX">
+        <span class="idb-dropzone-icon">📂</span>
+        <p class="idb-dropzone-primary">Drop file here</p>
+        <p class="idb-dropzone-secondary">or click to browse &nbsp;·&nbsp; PDF, EPUB, DOCX</p>
+      </div>
+
+      <input id="idb-file-input" type="file" accept=".pdf,.epub,.docx,.doc" aria-hidden="true" tabindex="-1" style="display: none;" />
+      
+      <div id="idb-modal-status" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="lf-card" id="idb-recent-section">
+      <h3 class="lf-card-header">Recent Files</h3>
+      <div id="idb-recent-list"></div>
+    </div>
+
+  </div>
+
+  <div id="dict-tooltip-countdown"></div>
+
+  <script src="shared_constants.js"></script>
+  <script src="db.js"></script>
+  <script src="sidebar.js"></script>
+</body>
+</html>

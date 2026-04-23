@@ -1,0 +1,544 @@
+/* ─── Shadow Host Reset ─── */
+:host {
+  all: initial; /* Kill any inheritance from host page */
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+/* ─── Tooltip container ─── */
+#dict-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 2147483647;
+  width: 370px;
+  background: var(--dict-bg, #ffffff);
+  border: 1px solid var(--dict-border, #e0e0e0);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dict-text, #333);
+  /* Reset inherited styles that could bleed in from the host page */
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  word-spacing: normal;
+  box-sizing: border-box;
+  pointer-events: auto;
+  overflow: hidden; /* clips child backgrounds to border-radius cross-browser */
+  isolation: isolate; /* own stacking context; prevents z-index bleed into host */
+  
+  /* Strict CSS Containment */
+  /* Prevents tooltip reflows from invalidating the host page layout */
+  contain: layout style paint;
+  will-change: top, transform, opacity;
+
+  animation: dict-fade-in 0.18s ease;
+  transition: top 0.12s ease;
+}
+
+/* Ensure all children also use border-box */
+#dict-tooltip *,
+#dict-tooltip *::before,
+#dict-tooltip *::after {
+  box-sizing: inherit;
+}
+
+@keyframes dict-fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Header ─── */
+#dict-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--dict-header-bg, #f5f5f5);
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid var(--dict-border, #e0e0e0);
+  color: var(--dict-text, #333);
+  /* Prevent text selection when the user clicks the close button rapidly. */
+  user-select: none;
+}
+
+#dict-tooltip-word {
+  font-size: 17px;
+  font-weight: 700;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Allow the word itself to be selected/copied. */
+  user-select: text;
+}
+
+#dict-tooltip-phonetic {
+  font-size: 13px;
+  opacity: 0.65;
+  font-style: italic;
+  flex-shrink: 1;         /* allow shrink so it never overflows the header */
+  min-width: 0;           /* permits flex shrink below intrinsic size */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Header right group ─── */
+#dict-tooltip-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ─── MW dictionary switch button ─── */
+#dict-mw-switch-btn {
+  display: none; /* JS overrides to "" when applicable */
+  align-items: center;
+  gap: 3px;
+  background: var(--dict-accent-bg, rgba(0, 0, 0, 0.06));
+  color: var(--dict-accent-text, #555);
+  border: 1px solid var(--dict-border, #e0e0e0);
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.18s, opacity 0.18s;
+  touch-action: manipulation;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+#dict-mw-switch-btn:hover {
+  background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.13));
+}
+
+#dict-mw-switch-btn:active {
+  background: var(--dict-border, rgba(0, 0, 0, 0.18));
+}
+
+#dict-mw-switch-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#dict-mw-switch-btn:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 2px;
+}
+
+#dict-tooltip-close {
+  background: var(--dict-close-bg, rgba(0, 0, 0, 0.08));
+  border: none;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--dict-text, #333);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+#dict-tooltip-close:hover {
+  background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.18));
+}
+
+#dict-tooltip-close:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 2px;
+}
+
+/* ─── Scroll area ─── */
+#dict-tooltip-scroll-area {
+  max-height: 400px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  /* Use standard 'thin' but ensure it works in the bundled viewer */
+  scrollbar-width: thin;
+  scrollbar-gutter: stable; /* Prevents layout jump when definitions load */
+  scrollbar-color: var(--dict-border, #ccc) transparent;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--dict-border, #ccc);
+  border-radius: 3px;
+}
+
+#dict-tooltip-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--dict-subtext, #aaa);
+}
+
+/* ─── Body ─── */
+#dict-tooltip-body {
+  padding: 12px 16px;
+}
+
+/* ─── Source label ─── */
+#dict-tooltip-source {
+  padding: 0 16px 10px;
+  font-size: 10px;
+  color: var(--dict-subtext, #bbb);
+  text-align: right;
+}
+
+/* ─── Loading / error states ─── */
+.dict-loading {
+  text-align: center;
+  color: var(--dict-subtext, #888);
+  padding: 10px 0;
+  margin: 0;
+}
+
+.dict-error {
+  color: #e74c3c;
+  margin: 0;
+}
+
+.dict-suggestion {
+  color: var(--dict-subtext, #888);
+  font-size: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* ─── Meanings ─── */
+.dict-meaning {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--dict-divider, #f0f0f0);
+}
+
+.dict-meaning:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.dict-pos {
+  display: inline-block;
+  background: var(--dict-accent-bg, rgba(0, 0, 0, 0.06));
+  color: var(--dict-accent-text, #555);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.dict-def {
+  margin: 4px 0;
+}
+
+.dict-example {
+  margin: 2px 0 8px 12px;
+  color: var(--dict-subtext, #888);
+  font-style: italic;
+  font-size: 13px;
+  border-left: 2px solid var(--dict-accent-text, #888);
+  padding-left: 8px;
+}
+
+.dict-synonyms,
+.dict-antonyms {
+  font-size: 12px;
+  color: var(--dict-subtext, #666);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.dict-antonyms strong {
+  color: #e74c3c;
+}
+
+/* ─── Audio button ─── */
+.dict-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--dict-accent-bg, rgba(0, 0, 0, 0.06));
+  color: var(--dict-accent-text, #555);
+  border: 1px solid var(--dict-border, #e0e0e0);
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.dict-audio-btn:hover {
+  background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.13));
+}
+
+.dict-audio-btn:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 2px;
+}
+
+/* ─── Auto-close countdown bar (WAAPI Managed) ─── */
+#dict-tooltip-countdown {
+  height: 3px;
+  background: var(--dict-accent-text, #888);
+  transform-origin: left;
+  transform: scaleX(0); /* Default hidden state */
+  will-change: transform; /* Hardware acceleration for WAAPI */
+}
+
+/* ─── Selection-gate pill ──────────────────────────────────────────────────── */
+#dict-pill {
+  display: none;
+  position: fixed;
+  z-index: 2147483647;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 7px;
+  background: var(--dict-pill-bg, #ffffff);
+  border: 1px solid var(--dict-pill-border, rgba(0,0,0,0.13));
+  border-radius: 999px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dict-pill-text, #333);
+  white-space: nowrap;
+  animation: dict-pill-pop 0.16s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-sizing: border-box;
+  isolation: isolate;
+  touch-action: manipulation;
+  will-change: transform, opacity;
+}
+
+#dict-pill.dict-pill-visible {
+  display: flex;
+}
+
+#dict-pill:hover {
+  box-shadow: 0 5px 18px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+
+#dict-pill:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+}
+
+#dict-pill:focus-visible {
+  outline: 2px solid var(--dict-accent-text, #555);
+  outline-offset: 3px;
+}
+
+#dict-pill-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
+}
+
+@keyframes dict-pill-pop {
+  from { opacity: 0; transform: scale(0.7) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);   }
+}
+
+#dict-pill.dict-pill-hiding {
+  animation: dict-pill-fade 0.12s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes dict-pill-fade {
+  from { opacity: 1; transform: scale(1)    translateY(0);   }
+  to   { opacity: 0; transform: scale(0.85) translateY(3px); }
+}
+
+/* ─── Reduced-motion overrides ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #dict-tooltip {
+    animation: none;
+    transition: none;
+    will-change: transform, opacity; 
+    backface-visibility: hidden;    
+   -webkit-font-smoothing: antialiased;
+  }
+
+  #dict-pill {
+    animation: none;
+    will-change: auto;
+  }
+
+  #dict-pill:hover,
+  #dict-pill:active {
+    transform: none;
+  }
+
+  #dict-pill.dict-pill-hiding {
+    animation: none;
+    opacity: 0;
+  }
+
+  #dict-tooltip-close,
+  .dict-audio-btn,
+  #dict-mw-switch-btn {
+    transition: none;
+  }
+
+  @keyframes dict-pill-pop {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @keyframes dict-fade-in {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* ─── Forced-colours (Windows High Contrast) support ──────────────────────── */
+@media (forced-colors: active) {
+  #dict-tooltip {
+    border: 2px solid ButtonText;
+    box-shadow: none;
+  }
+
+  #dict-tooltip-header {
+    border-bottom: 1px solid ButtonText;
+  }
+
+  #dict-tooltip-close {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-tooltip-close:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  #dict-tooltip-close:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .dict-pos {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  .dict-error {
+    color: #e74c3c;
+    forced-color-adjust: none;
+  }
+
+  .dict-antonyms strong {
+    color: #e74c3c;
+    forced-color-adjust: none;
+  }
+
+  .dict-audio-btn {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-mw-switch-btn {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-mw-switch-btn:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  #dict-mw-switch-btn:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .dict-audio-btn:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .dict-audio-btn:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  #dict-tooltip-countdown {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  #dict-pill {
+    border: 2px solid ButtonText;
+    box-shadow: none;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+
+  #dict-pill:hover {
+    background: Highlight;
+    color: HighlightText;
+    transform: none; 
+    box-shadow: none;
+  }
+
+  #dict-pill:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 3px;
+  }
+
+  #dict-pill-icon {
+    filter: none;
+    forced-color-adjust: auto;
+  }
+}
