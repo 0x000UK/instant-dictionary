@@ -1,29 +1,15 @@
+/* ─── Shadow Host Reset ─── */
+:host {
+  all: initial; /* Kill any inheritance from host page */
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
 /* ─── Tooltip container ─── */
-/*
- * position: fixed keeps the tooltip anchored to the viewport even when the
- * page scrolls. The shadow host is fixed at 0,0 with zero size, so all
- * left/top values set by JS are pure viewport coordinates.
- *
- * pointer-events: auto re-enables mouse interaction on the tooltip itself;
- * the shadow host has pointer-events: none so it doesn't intercept page clicks.
- *
- * overflow: hidden clips child backgrounds to the border-radius reliably
- * across all browsers. box-shadow is painted outside the border-box so it
- * is not affected.
- *
- * isolation: isolate creates an explicit stacking context so z-index
- * comparisons are self-contained and cannot bleed into the host page.
- *
- * max-height and overflow are removed from this element and moved to the
- * inner scroll area (#dict-tooltip-scroll-area) so the countdown bar always
- * remains visible at the very bottom of the tooltip regardless of scroll
- * position.
- *
- * transition: top provides a smooth vertical shift when content finishes
- * loading and the tooltip height changes. JS suppresses this via an inline
- * style override when first showing a new word so the tooltip doesn't slide
- * across the screen from its previous position.
- */
 #dict-tooltip {
   display: none;
   position: fixed;
@@ -46,6 +32,12 @@
   pointer-events: auto;
   overflow: hidden; /* clips child backgrounds to border-radius cross-browser */
   isolation: isolate; /* own stacking context; prevents z-index bleed into host */
+  
+  /* Strict CSS Containment */
+  /* Prevents tooltip reflows from invalidating the host page layout */
+  contain: layout style paint;
+  will-change: top, transform, opacity;
+
   animation: dict-fade-in 0.18s ease;
   transition: top 0.12s ease;
 }
@@ -98,14 +90,7 @@
   white-space: nowrap;
 }
 
-/* ─── Header right group ───
- *
- * Wraps the MW switch button and the close button so they sit flush-right
- * together regardless of whether the switch button is visible.  Using a
- * nested flex container rather than individual margin-left:auto assignments
- * prevents the close button from jumping laterally when the switch button
- * appears or disappears.
- */
+/* ─── Header right group ─── */
 #dict-tooltip-header-right {
   display: flex;
   align-items: center;
@@ -114,15 +99,7 @@
   flex-shrink: 0;
 }
 
-/* ─── MW dictionary switch button ───
- *
- * Only visible when MW produced the result AND both MW keys are configured.
- * The button sits inside #dict-tooltip-header-right, left of the close button.
- *
- * Intentionally compact — it must not dominate the header.  Pill-shaped with
- * a swap icon prefix (⇄ injected by JS) so its purpose is immediately clear.
- * font-size 11px keeps it clearly subordinate to the word heading.
- */
+/* ─── MW dictionary switch button ─── */
 #dict-mw-switch-btn {
   display: none; /* JS overrides to "" when applicable */
   align-items: center;
@@ -146,9 +123,6 @@
   flex-shrink: 0;
 }
 
-/* Shown state set by JS: element.style.display = "inline-flex".
- * Hidden state set by JS: element.style.display = "none". */
-
 #dict-mw-switch-btn:hover {
   background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.13));
 }
@@ -170,8 +144,6 @@
 #dict-tooltip-close {
   background: var(--dict-close-bg, rgba(0, 0, 0, 0.08));
   border: none;
-  /* appearance: none removes platform-native button chrome on Safari/iOS
-     so only our explicit styles are applied. */
   -webkit-appearance: none;
   appearance: none;
   color: var(--dict-text, #333);
@@ -187,7 +159,6 @@
   transition: background 0.2s;
   flex-shrink: 0;
   padding: 0;
-  /* Prevent 300 ms tap delay on touch devices. */
   touch-action: manipulation;
   user-select: none;
 }
@@ -201,26 +172,14 @@
   outline-offset: 2px;
 }
 
-/* ─── Scroll area ───
- *
- * Wraps the body and source label so only this region scrolls. Keeping
- * overflow here (and off the tooltip root) ensures the countdown bar is
- * always visible at the bottom of the tooltip no matter how long the
- * definition is.
- *
- * overscroll-behavior-y: contain prevents the scroll event from propagating
- * to the page beneath the tooltip when the user reaches the top or bottom
- * of the scroll area (scroll chaining / rubber-band bleed-through).
- *
- * scrollbar-width / scrollbar-color are the W3C Scrollbar Styling standard,
- * supported by Firefox since v64. The -webkit-scrollbar pseudo-elements
- * remain for Chromium-based environments.
- */
+/* ─── Scroll area ─── */
 #dict-tooltip-scroll-area {
   max-height: 400px;
   overflow-y: auto;
   overscroll-behavior-y: contain;
+  /* Use standard 'thin' but ensure it works in the bundled viewer */
   scrollbar-width: thin;
+  scrollbar-gutter: stable; /* Prevents layout jump when definitions load */
   scrollbar-color: var(--dict-border, #ccc) transparent;
 }
 
@@ -262,12 +221,6 @@
   margin: 0;
 }
 
-/*
- * margin: 0 explicitly resets the UA default block margins that a <p> element
- * carries. Without this, error messages add unintended vertical whitespace
- * that throws off the body padding rhythm — identical to the reset already
- * applied to .dict-loading.
- */
 .dict-error {
   color: #e74c3c;
   margin: 0;
@@ -300,7 +253,6 @@
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  /* 0.05em scales with font size rather than being fixed in px. */
   letter-spacing: 0.05em;
   padding: 2px 8px;
   border-radius: 4px;
@@ -361,62 +313,16 @@
   outline-offset: 2px;
 }
 
-/* ─── Auto-close countdown bar ───
- *
- * This is a real DOM element (#dict-tooltip-countdown). A real element is
- * reliable when the parent has overflow-y on a child scroll area;
- * pseudo-element position:sticky is inconsistent across browsers in that
- * context.
- *
- * The bar lives outside #dict-tooltip-scroll-area so it is always pinned to
- * the bottom of the tooltip and is never scrolled out of view.
- *
- * The animation only plays while .dict-counting is present, and pauses when
- * the cursor is over the tooltip. animationend fires on the bar element and
- * bubbles up to #dict-tooltip where the JS listener closes the tooltip.
- */
+/* ─── Auto-close countdown bar (WAAPI Managed) ─── */
 #dict-tooltip-countdown {
   height: 3px;
   background: var(--dict-accent-text, #888);
-  /* border-radius is not needed here because #dict-tooltip has
-     overflow: hidden which clips the bar to the tooltip's rounded corners. */
   transform-origin: left;
-  transform: scaleX(0); /* hidden when not counting */
+  transform: scaleX(0); /* Default hidden state */
+  will-change: transform; /* Hardware acceleration for WAAPI */
 }
 
-#dict-tooltip.dict-counting #dict-tooltip-countdown {
-  transform: scaleX(1);
-  animation: dict-countdown var(--dict-auto-close-ms, 8000ms) linear forwards;
-}
-
-/* Pause the bar while the cursor is inside the tooltip */
-#dict-tooltip.dict-counting:hover #dict-tooltip-countdown {
-  animation-play-state: paused;
-}
-
-@keyframes dict-countdown {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0); }
-}
-
-/* ─── Selection-gate pill ────────────────────────────────────────────────────
- *
- * Shown after a click-drag selection so the user can confirm they want a
- * dictionary lookup.
- * Double-click bypasses the pill entirely.
- *
- * The pill is a fixed-position element that sits outside the tooltip; it lives
- * in the same shadow root so it inherits the same style isolation.
- *
- * pointer-events: auto re-enables interaction (the shadow host is none).
- * The entry animation is a quick spring-pop so it feels snappy, not sluggish.
- *
- * isolation: isolate creates an explicit stacking context for the pill so
- * its z-index is self-contained.
- *
- * will-change: transform, opacity is set here (before the element is shown)
- * so the compositor can promote it to its own layer ahead of the animation.
- */
+/* ─── Selection-gate pill ──────────────────────────────────────────────────── */
 #dict-pill {
   display: none;
   position: fixed;
@@ -447,7 +353,6 @@
   display: flex;
 }
 
-/* Slight lift on hover */
 #dict-pill:hover {
   box-shadow: 0 5px 18px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.12);
   transform: translateY(-1px);
@@ -458,38 +363,24 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.16);
 }
 
-/*
- * Keyboard focus indicator for the pill. The pill is an interactive element
- * that must be reachable via keyboard (WCAG 2.4.7). :focus-visible restricts
- * the outline to keyboard navigation so mouse users never see a focus ring.
- */
 #dict-pill:focus-visible {
   outline: 2px solid var(--dict-accent-text, #555);
   outline-offset: 3px;
 }
 
-/* The icon inside the pill */
 #dict-pill-icon {
   width: 18px;
   height: 18px;
   display: block;
   flex-shrink: 0;
-  /* Slight drop-shadow to make the icon pop on both light/dark backgrounds */
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
 }
 
-/* Entry pop animation */
 @keyframes dict-pill-pop {
   from { opacity: 0; transform: scale(0.7) translateY(4px); }
   to   { opacity: 1; transform: scale(1)   translateY(0);   }
 }
 
-/* Exit fade (applied by JS before removing .dict-pill-visible).
- *
- * pointer-events: none ensures clicks cannot land on the pill while it is
- * fading out and visually disappearing — without this a fast user could
- * trigger a lookup on a word they intended to dismiss.
- */
 #dict-pill.dict-pill-hiding {
   animation: dict-pill-fade 0.12s ease forwards;
   pointer-events: none;
@@ -500,22 +391,14 @@
   to   { opacity: 0; transform: scale(0.85) translateY(3px); }
 }
 
-/* ─── Reduced-motion overrides ───────────────────────────────────────────────
- *
- * WCAG 2.1 Success Criterion 2.3.3 (Animation from Interactions, AAA) and
- * the broadly adopted 2.1 Level AA expectation both require that motion
- * triggered by interaction can be disabled. When the OS "reduce motion"
- * preference is active, all animations and transitions are either disabled
- * or collapsed to instant cuts.
- *
- * The countdown bar still plays but at 1ms duration (effectively instant)
- * so the auto-close mechanism still fires; only the visual sweep is removed.
- */
+/* ─── Reduced-motion overrides ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   #dict-tooltip {
     animation: none;
     transition: none;
-    will-change: auto;
+    will-change: transform, opacity; 
+    backface-visibility: hidden;    
+   -webkit-font-smoothing: antialiased;
   }
 
   #dict-pill {
@@ -539,10 +422,6 @@
     transition: none;
   }
 
-  #dict-tooltip.dict-counting #dict-tooltip-countdown {
-    animation-duration: 1ms;
-  }
-
   @keyframes dict-pill-pop {
     from { opacity: 1; transform: none; }
     to   { opacity: 1; transform: none; }
@@ -554,24 +433,7 @@
   }
 }
 
-/* ─── Forced-colours (Windows High Contrast) support ────────────────────────
- *
- * In forced-colours mode the browser replaces most author colours with a
- * restricted system palette, but it cannot override SVG filter effects,
- * box-shadow, or opacity used for purely decorative reasons. Explicit
- * overrides here ensure every interactive element has a visible border and
- * uses palette keywords so the UA can map them correctly.
- *
- * ButtonText / ButtonFace / Highlight / HighlightText are CSS system colour
- * keywords guaranteed to exist in forced-colours mode.
- *
- * forced-color-adjust: none is used only where preserving the author colour
- * is essential for conveying semantic meaning that cannot be expressed any
- * other way — specifically: error red (.dict-error) and antonym red
- * (.dict-antonyms strong). Without it those elements would render in the
- * system ButtonText colour, indistinguishable from normal text, silently
- * dropping the "this is wrong / this is an opposite" signal.
- */
+/* ─── Forced-colours (Windows High Contrast) support ──────────────────────── */
 @media (forced-colors: active) {
   #dict-tooltip {
     border: 2px solid ButtonText;
@@ -606,21 +468,11 @@
     forced-color-adjust: none;
   }
 
-  /*
-   * Preserve the semantic error-red so the user can still distinguish an
-   * error message from regular definition text. The UA cannot convey this
-   * distinction through its system palette alone.
-   */
   .dict-error {
     color: #e74c3c;
     forced-color-adjust: none;
   }
 
-  /*
-   * Preserve the semantic antonym-red so antonyms remain visually distinct
-   * from synonyms, which is information that plain text colour is the only
-   * vehicle for in this layout.
-   */
   .dict-antonyms strong {
     color: #e74c3c;
     forced-color-adjust: none;
@@ -676,7 +528,7 @@
   #dict-pill:hover {
     background: Highlight;
     color: HighlightText;
-    transform: none; /* no visual lift — focus on legibility */
+    transform: none; 
     box-shadow: none;
   }
 

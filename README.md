@@ -10,7 +10,7 @@ No popups. No new tabs. No searching.
 
 You're reading something and hit a word you don't know. Instead of copying it, switching tabs, Googling it, and losing your place — you just double-click it. The definition appears right there, next to the word, and disappears on its own after a few seconds.
 
-It works on pretty much any page — articles, Wikipedia, PDFs in the browser, documentation, whatever.
+It works on pretty much any page — articles, Wikipedia, web PDFs, local documents, documentation, whatever.
 
 ---
 
@@ -18,15 +18,45 @@ It works on pretty much any page — articles, Wikipedia, PDFs in the browser, d
 
 **Double-click** any single word → instant definition.
 
-**Click and drag** to highlight a word or short phrase → a small **Define** pill appears near your cursor. Click it to look up the selection. (This gate exists so dragging to copy doesn't accidentally trigger a lookup every time.)
+**Click and drag** to highlight a word or short phrase → a small **Define** pill appears near your cursor. Click it to look up the selection. (This gate exists so dragging to copy doesn't accidentally trigger a lookup every time).
 
-**Keyboard** → make a selection any way you like, then press **Shift** to trigger the lookup.
+**Right-click (Context Menu)** → Select text, right-click, and choose **"Define '...'"**.
 
-**Close it** → click the × button, click anywhere outside, or press **Escape**.
+**Keyboard** → Make a selection any way you like, then press the designated hotkey (**Alt+Q**) to trigger the lookup. (**Note: Hotkey(Alt+Q) and 'double-click on a word to trigger the tooltip' will not work in Reader Mode (`about:reader`). To define a word in Reader Mode, highlight the text, right click to open Context Menu & click "Define".**)
 
-The tooltip auto-closes after 6 seconds so it won't get in your way if you ignore it. Hovering over it pauses the countdown.
+**Toggle Sidebar & Search** → Press **Alt+W** (Mac: **Cmd+W**) to instantly open or close the Instant Dictionary sidebar. From here, you can manage local files or use the dedicated search bar to look up words manually.
+<br><br><span style="color: #d32f2f; font-size: 1.15em; font-weight: bold;">⚠️ IMPORTANT NOTE: A brief visual flash of the dictionary sidebar opening and closing upon browser launch is expected behavior. This occurs exclusively if Firefox was closed while the sidebar was active, and is an unavoidable artifact of Firefox's native Session Restore sequence.</span>
+
+**Close it** → click the × button, click anywhere outside the tooltip, or press **Alt+Q** or **Escape**.
+
+The tooltip auto-closes after 6 seconds so it won't get in your way if you ignore it. Hovering over it pauses the countdown, if you want to take your time reading the meaning(s).
 
 ---
+
+## Reading PDFs & Local Files
+
+Web browsers heavily restrict extensions from running on local files (`file:///`) and native PDF viewers for security reasons. To bypass this, Instant Dictionary comes with a built-in, fully integrated document viewer.
+
+**Web PDFs:** Firefox's built-in PDF viewer doesn't allow extensions to run inside it, so the dictionary would have no way to work on PDFs opened that way. To get around this, Instant Dictionary quietly watches for any PDF links you click on the web. The moment you click one, it steps in before Firefox can open it in the default viewer, and loads the document in its own built-in PDF viewer instead — one that already has the dictionary fully active. By the time the PDF appears on your screen, everything is ready to go. Just double-click or select any word as usual.
+
+**Local Files (PDF, EPUB, DOCX):** To open documents stored on your computer, you need to access the Instant Dictionary Sidebar. You can do this in two ways:
+
+* **Method 1: The Quick Shortcut (Recommended)**
+  Simply press **Alt+W** (Mac: **Cmd+W**) to instantly open the sidebar.
+* **Method 2: The Permanent Toolbar Button**
+  Go to Firefox **Settings** > **General** > type "Sidebar" in the search box at the top > Check the **"Show sidebar"** box. A sidebar icon will permanently appear at the top-left of your browser toolbar. Click it and select "Instant Dictionary" from the dropdown.
+
+Once the sidebar is open:
+1. Click the 📂 **Open Local Files** button at the top.
+2. Drag and drop your document into the **Dropzone**, or click it to browse your computer.
+3. The file opens seamlessly with full dictionary support. *(Note: PDF is fully supported; EPUB and DOCX viewers are coming soon).*
+---
+
+## Recent Files & Memory Management:
+
+1. **Bookshelf Storage:** Your last 5 opened local files are saved securely inside the extension's database for quick, 1-click access. Older files are automatically evicted to save space.
+2. **Smart Tab Routing:** Every unique document opens in its own tab. If you click a file in the sidebar that is already open, the extension will instantly pull your browser focus to that existing tab, rather than creating an annoying duplicate.
+3. **Session Resumption:** If you close Firefox and reopen it, the document will load and instantly jump to your exact last-read page and scroll position!
 
 ## What shows up in the tooltip
 
@@ -44,7 +74,7 @@ The tooltip auto-closes after 6 seconds so it won't get in your way if you ignor
 
 ## Where it gets definitions from
 
-The extension tries sources in sequence and stops at the first one that returns a result. Which sources are tried, and in what order, depends on your [Lookup Priority](#lookup-priority) setting and whether you have API keys saved.
+The extension tries sources in sequence and stops at the first one that returns a result. Which sources are tried, and in what order, depends on your **Lookup Priority** setting and whether you have API keys saved.
 
 **Free sources (no setup required):**
 
@@ -101,14 +131,10 @@ Configurable in Settings → **Lookup** tab. Controls the source order when API 
 
 | Setting | Behaviour |
 |---|---|
-| **Standard (Recommended)** *(default)* | Free sources lead. For single words: Free Dictionary → Wiktionary → MW Collegiate → MW Thesaurus → STANDS4 Vocab. For phrases: Wiktionary → Free Dictionary → STANDS4 Idioms → MW Collegiate → MW Thesaurus. |
-| **Enhanced** | Configured APIs lead. For single words: MW Collegiate → MW Thesaurus → STANDS4 Vocab → Wiktionary → Free Dictionary. For phrases: STANDS4 Idioms → MW Collegiate → MW Thesaurus → Wiktionary → Free Dictionary. |
+| **Standard (Recommended)** *(default)* | Queries publicly available sources first. API credentials are consulted only if primary sources return no result. |
+| **Enhanced** | Queries your configured API sources first, then falls back to public sources. |
 
 The source sequence is printed to the **Logs** tab on every lookup so you can see exactly what was tried and in what order.
-
-> **Note:** "Free first" was a previous setting. It is no longer available and is treated as **Standard** if found in saved storage.
-
-Setting has no effect if no API keys are saved — free sources are always tried regardless.
 
 ---
 
@@ -139,29 +165,15 @@ Logs are capped at 200 entries (oldest evicted first) and persist across popup o
 
 ## A few things worth knowing
 
-**It adapts to the page's colour scheme.** The tooltip reads the computed background colour of the page and adjusts its own colours to match — so it looks at home on dark-mode sites, light sites, and anything in between.
+**It adapts to the page's colour scheme.** The tooltip reads the computed background colour of the page and adjusts its own colours to match.
 
-**Lookups are cached per session.** Looking up the same word twice in a tab is instant — the result is served from an in-memory LRU cache (up to 200 entries). The cache is keyed by priority setting, so switching from Standard to Enhanced and back correctly triggers a fresh fetch rather than serving a stale cached result.
+**Lookups are cached per session.** Looking up the same word twice in a tab is instant — the result is served from an in-memory LRU cache. The cache is keyed by priority setting, so switching from Standard to Enhanced and back correctly triggers a fresh fetch.
 
-**The MW toggle is also cached.** Once you switch between Collegiate and Thesaurus for a word, the alternate result is stored in a separate LRU cache. Toggling back is instant without another network request.
+**Short inputs are filtered.** Single characters are only accepted if they're "a" or "I".
 
-**Short inputs are filtered.** Single characters are only accepted if they're "a" or "I" — the only single-letter English words with dictionary entries. Avoids pointless calls when you accidentally double-click whitespace or punctuation.
+**Selections must be letters only.** Numbers, URLs, code, and emoji are not looked up.
 
-**Selections must be letters only (plus spaces, hyphens, apostrophes).** Numbers, URLs, code, and emoji are not looked up.
-
-**Max lookup length is 60 characters.** Long selections are silently ignored. The extension is built for words and short phrases, not sentences.
-
-**Lookups are debounced (300 ms).** If you make a selection and immediately adjust it, the extension waits 300 ms before firing. This prevents spamming the API while you're dragging to find the right selection endpoint. Any in-flight request from a previous lookup is cancelled the moment a new one starts.
-
-**Exponential backoff on rate limits.** If an API returns HTTP 429, the extension retries automatically — up to 3 times, with 1 s → 2 s → 4 s delays — before falling back to the next source in the sequence. The backoff sleep is abort-aware: if you dismiss the tooltip mid-wait, the retry is cancelled immediately.
-
-**Tooltip tracks the page as you scroll.** The tooltip is pinned to the position where it was spawned, not a fixed screen position, so it doesn't drift away from the word when you scroll.
-
-**Audio playback pauses the auto-close countdown.** The tooltip won't disappear while pronunciation audio is playing. The countdown resumes once playback ends.
-
-**The extension is style-isolated.** The tooltip and pill live inside a closed Shadow DOM element that the host page's CSS cannot reach. The extension's own CSS cannot bleed out into the page either.
-
-**Works after extension updates in already-open tabs.** If the extension is reloaded (e.g. after an update), the content script detects the invalidated runtime context and stops making API calls gracefully rather than throwing errors.
+**Max lookup length is 60 characters.** Long selections are silently ignored.
 
 ---
 
@@ -190,8 +202,10 @@ Logs are capped at 200 entries (oldest evicted first) and persist across popup o
 |---|---|
 | **`<all_urls>`** | So the extension works on any site, not just a hardcoded list |
 | **`storage`** | To save your API keys, priority setting, daily limits, and usage counters locally in the browser |
+| **`contextMenus`** / **`menus`** | To add the "Define '...'" option to the right-click menu |
+| **`webRequest`** / **`webRequestBlocking`** | To automatically intercept web PDFs and route them to the dictionary-enabled custom viewer |
 
-Network requests go only to the dictionary API endpoints. No data is collected, no analytics run, and nothing is transmitted anywhere except the word you looked up — sent to whichever dictionary API handles that request.
+Network requests go only to the dictionary API endpoints. No data is collected, no analytics run, and nothing is transmitted anywhere except the word you looked up. Local files are processed entirely on your machine and stored locally in IndexedDB.
 
 ---
 

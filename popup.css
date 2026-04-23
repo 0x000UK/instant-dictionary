@@ -1,9 +1,10 @@
-/* ─── Google Fonts ─── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* ─── Typography ─────────────────────────────────────────────────────────── */
 
-/* ─── Design tokens — Dark (default) ─── */
 :root {
   color-scheme: light dark;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
   --bg-base:        #0d0d10;
   --bg-card:        #17171c;
@@ -115,8 +116,12 @@ body {
   width: 400px;
   max-height: 600px;
   overflow-y: auto;
+  
+  /* Prevents popup window scroll chaining/bouncing */
+  overscroll-behavior-y: none;
+  
   padding-bottom: 6px;
-  font-family: 'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.55;
   color: var(--text-primary);
@@ -126,8 +131,6 @@ body {
 }
 
 /* ─── App Views ──────────────────────────────────────────────────────────── */
-/* Each .app-view is a full independent screen. Only one is shown at a time.
-   View transitions are handled by toggling the [hidden] attribute in JS.      */
 .app-view { display: flex; flex-direction: column; min-height: 100%; }
 .app-view[hidden] { display: none; }
 
@@ -156,7 +159,6 @@ body {
   flex-shrink:0;
   box-shadow:0 0 0 1px rgba(128,128,128,0.15);
 }
-/* Header text block stretches to fill available space */
 .popup-header-text { flex: 1; min-width: 0; }
 .popup-title {
   font-size:15px;font-weight:700;
@@ -167,8 +169,6 @@ body {
   font-size:11.5px;color:var(--text-muted);
   font-weight:500;margin-top:1px;
 }
-
-/* Settings header: back-arrow replaces logo, no flex gap adjustment needed */
 .settings-header { gap: 10px; }
 
 /* ─── Icon button (gear / back-arrow) ─── */
@@ -214,7 +214,7 @@ body {
   background:none;
   border:none;
   border-bottom:2.5px solid transparent;
-  font-family:'Inter',sans-serif;
+  font-family: var(--font-sans);
   font-size:13px;font-weight:600;
   color:var(--text-tab);
   cursor:pointer;
@@ -335,7 +335,7 @@ body {
   border:1px solid var(--border-input);
   border-radius:var(--radius-md);
   font-size:13px;
-  font-family:'JetBrains Mono','Fira Code','Consolas',monospace;
+  font-family: var(--font-mono);
   font-weight:400;
   color:var(--text-primary);
   background:var(--bg-input);
@@ -352,7 +352,7 @@ body {
 }
 .popup-input::placeholder{
   color:var(--text-muted);
-  font-family:'Inter',sans-serif;
+  font-family: var(--font-sans);
   font-size:12.5px;letter-spacing:0;font-weight:400;
 }
 .popup-input.is-error{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim);}
@@ -429,7 +429,7 @@ body {
   background:var(--accent);color:#fff;border:none;
   border-radius:var(--radius-md);
   font-size:13.5px;font-weight:700;
-  font-family:'Inter',sans-serif;cursor:pointer;
+  font-family: var(--font-sans);cursor:pointer;
   transition:background var(--transition),box-shadow var(--transition),transform var(--transition-fast);
   letter-spacing:-0.01em;box-shadow:var(--shadow-btn);
 }
@@ -447,7 +447,7 @@ body {
   border:1px solid var(--border-input);
   border-radius:var(--radius-md);
   font-size:13.5px;font-weight:600;
-  font-family:'Inter',sans-serif;cursor:pointer;
+  font-family: var(--font-sans);cursor:pointer;
   transition:background var(--transition),color var(--transition),border-color var(--transition),transform var(--transition-fast);
   white-space:nowrap;
 }
@@ -485,13 +485,17 @@ body {
   background:var(--bg-tooltip);
   color:var(--text-tooltip);
   font-size:12px;
-  font-family:'Inter',sans-serif;font-weight:400;
+  font-family: var(--font-sans);font-weight:400;
   line-height:1.6;
   border-radius:var(--radius-md);
   box-shadow:var(--shadow-tooltip);
   pointer-events:none;
   opacity:0;
   transform:translateY(4px);
+  
+  /* GPU compositing */
+  will-change: opacity, transform;
+  
   transition:opacity 0.15s ease,transform 0.15s ease;
   z-index:100;
 }
@@ -514,6 +518,10 @@ body {
   min-height:24px;text-align:center;
   font-size:12.5px;font-weight:600;
   padding:4px 16px 0;
+  
+  /* GPU compositing */
+  will-change: opacity, transform;
+  
   transition:opacity var(--transition),transform var(--transition);
   opacity:0;transform:translateY(2px);
   letter-spacing:0.01em;
@@ -589,7 +597,7 @@ body {
   margin-bottom: 13px;
 }
 
-/* Progress bar fill — colour set via JS class */
+/* Progress bar fill */
 .usage-bar-fill {
   height: 100%;
   border-radius: 999px;
@@ -652,7 +660,7 @@ body {
 .usage-slider-val {
   font-size: 12px;
   font-weight: 700;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-family: var(--font-mono);
   color: var(--text-primary);
   min-width: 32px;
   text-align: right;
@@ -663,7 +671,6 @@ body {
 .logs-card {
   padding: 0;
   overflow: hidden;
-  /* Reserve space so the card doesn't collapse when empty */
   min-height: 64px;
 }
 
@@ -673,7 +680,6 @@ body {
   max-height: 300px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* Scroll newest entries into view — set to "column-reverse" in JS after load */
 }
 
 /* Empty state */
@@ -701,7 +707,7 @@ body {
 .log-entry:hover { background: rgba(128,128,128,0.04); }
 
 .log-ts {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-family: var(--font-mono);
   font-size: 10.5px;
   color: var(--text-muted);
   white-space: nowrap;
@@ -724,13 +730,13 @@ body {
   word-break: break-word;
 }
 
-/* INFO — default style */
+/* INFO */
 .log-entry-info .log-level {
   color: var(--text-muted);
   background: rgba(128,128,128,0.10);
 }
 
-/* WARN — orange */
+/* WARN */
 .log-entry-warn .log-level {
   color: var(--orange);
   background: var(--orange-dim);
@@ -739,7 +745,7 @@ body {
   color: var(--orange);
 }
 
-/* ERROR — red, visually stands out */
+/* ERROR */
 .log-entry-error {
   background: var(--red-dim);
 }
@@ -777,8 +783,30 @@ body {
   color: var(--text-muted);
 }
 
-/* Red hint text used in the Logs panel description */
 .logs-hint-red {
   color: var(--red);
   font-weight: 600;
+}
+
+/* ─── Forced-colours (Windows High Contrast) support ──────────────────────── */
+@media (forced-colors: active) {
+  .usage-bar-track {
+    border: 1px solid ButtonText;
+    background: transparent;
+  }
+  
+  .usage-bar-fill {
+    background-color: Highlight;
+  }
+  
+  .log-entry-warn .log-level,
+  .log-entry-error .log-level,
+  .popup-badge-rec {
+    border: 1px solid ButtonText;
+    forced-color-adjust: none;
+  }
+  
+  .log-entry-error .log-msg {
+    color: Highlight;
+  }
 }

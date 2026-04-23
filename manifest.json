@@ -1,31 +1,61 @@
 {
   "manifest_version": 2,
   "name": "Instant Dictionary",
-  "version": "1.2.4",
+  "version": "1.0.2",
   "description": "Double-click or select any word, phrase, or idiom to see its definition instantly.",
   "author": "UK",
-  "homepage_url": "https://github.com/0x000UK",
+  "homepage_url": "https://github.com/0x000UK/instant-dictionary",
   "permissions": [
+    "tabs",
     "<all_urls>",
-    "storage"
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "contextMenus"
   ],
+  "background": {
+    "scripts": [
+      "shared_constants.js",
+      "background.js"
+    ],
+    "persistent": true
+  },
   "web_accessible_resources": [
     "content.css",
-    "icons/icon.png"
+    "icons/icon48.png",
+    "pdfjs/*"
   ],
+  "sidebar_action": {
+    "default_icon": "icons/icon48.png",
+    "default_title": "Instant Dictionary",
+    "default_panel": "sidebar.html",
+    "open_at_install": false
+  },
+  "commands": {
+    "toggle-dictionary": {
+      "suggested_key": {
+        "default": "Alt+Q",
+        "mac": "MacCtrl+Q"
+      },
+      "description": "Look up word / Close dictionary tooltip"
+    },
+    "_execute_sidebar_action": {
+      "suggested_key": {
+        "default": "Alt+W",
+        "mac": "MacCtrl+W"
+      },
+      "description": "Toggle Instant Dictionary Sidebar"
+    }
+  },
   "icons": {
-    "16":  "icons/icon.png",
-    "32":  "icons/icon.png",
-    "48":  "icons/icon.png",
-    "128": "icons/icon.png",
-    "512": "icons/icon.png"
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png",
+    "512": "icons/icon512.png"
   },
   "browser_action": {
     "default_icon": {
-      "16":  "icons/icon.png",
-      "32":  "icons/icon.png",
-      "48":  "icons/icon.png",
-      "128": "icons/icon.png"
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
     },
     "default_title": "Instant Dictionary Settings",
     "default_popup": "popup.html"
@@ -40,23 +70,21 @@
         "content.js"
       ],
       "run_at": "document_idle",
-      "all_frames": false
+      "all_frames": true,
+      "match_about_blank": true
     }
   ],
-  "content_security_policy": "default-src 'none'; script-src 'self'; connect-src https://api.dictionaryapi.dev https://en.wiktionary.org https://www.stands4.com https://www.dictionaryapi.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; media-src https:;",
+  "content_security_policy": "default-src 'none'; script-src 'self'; worker-src 'self' blob:; connect-src blob: https: http:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src https:; object-src 'none';",
   "browser_specific_settings": {
     "gecko": {
-      "id": "{a3f7c2e1-84d6-4b9a-bc35-1f0e2d5a6c78}",
-      "strict_min_version": "142.0",
+      "id": "1n5t4nt.d1ct@0x000uk.d3v",
+      "strict_min_version": "128.0",
       "update_url": "https://raw.githubusercontent.com/0x000UK/instant-dictionary/main/updates.json",
       "data_collection_permissions": {
         "required": [
           "none"
         ]
       }
-    },
-    "gecko_android": {
-      "strict_min_version": "142.0"
     }
   }
 }

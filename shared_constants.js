@@ -24,5 +24,9 @@ window.SharedConstants = Object.freeze({
 
   // Maximum milliseconds to wait for a chrome.storage operation to respond
   // before treating it as a timeout and recovering gracefully.
-  STORAGE_TIMEOUT_MS: 10_000,
+  STORAGE_TIMEOUT_MS: 2_000,
+  // Maximum milliseconds to wait for the native audio element to emit the 
+  // 'playing', 'error', or 'ended' event before forcefully aborting and 
+  // unlocking the UI thread.
+  AUDIO_SAFETY_MS: 5000,
 });
