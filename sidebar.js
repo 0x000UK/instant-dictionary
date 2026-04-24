@@ -42,14 +42,14 @@
   const MAX_LOG_ENTRIES         = 200;
 
   const lookupCache = new Map();
-  const mwAltCache  = new Map();
+  const altCache    = new Map();
 
   let currentAbortController = null;
   let currentAudio           = null;
   let _switchSafetyTimer     = null;
   let _configuredApiWarnings = [];
   let _lookupSeq             = 0;
-  let _mwState               = { activeApi: null, word: null, text: null };
+  let _switchState           = { group: null, activeApi: null, word: null, text: null };
 
   const _reducedMotionMql = window.matchMedia?.("(prefers-reduced-motion: reduce)");
   let _autoCloseAnimation = null;
@@ -60,7 +60,7 @@
   const elPhonetic  = document.getElementById("dict-tooltip-phonetic");
   const elBody      = document.getElementById("dict-tooltip-body");
   const elSource    = document.getElementById("dict-tooltip-source");
-  const mwSwitchBtn = document.getElementById("dict-mw-switch-btn");
+  const switchBtn = document.getElementById("dict-switch-btn");
   const countdownEl = document.getElementById("dict-tooltip-countdown");
 
   const searchInput  = document.getElementById("dict-search-input");
@@ -188,9 +188,9 @@
     if (lookupCache.size >= CACHE_MAX_SIZE) lookupCache.delete(lookupCache.keys().next().value);
     lookupCache.set(key, value);
   }
-  function mwAltCacheSet(key, value) {
-    if (mwAltCache.size >= CACHE_MAX_SIZE) mwAltCache.delete(mwAltCache.keys().next().value);
-    mwAltCache.set(key, value);
+  function altCacheSet(key, value) {
+    if (altCache.size >= CACHE_MAX_SIZE) altCache.delete(altCache.keys().next().value);
+    altCache.set(key, value);
   }
 
   // ─── Storage Readers ──────────────────────────────────────────────────────
@@ -435,7 +435,7 @@
   }
 
   // ─── Source Fetchers ──────────────────────────────────────────────────────
-  async function fetchFreeDictionary(text, signal, effectiveCacheKey) {
+  async function fetchFreeDictionary(text, signal, effectiveCacheKey, baseKey) {
     try {
       const response = await fetchWithBackoff(
         `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(text)}`,
@@ -484,7 +484,12 @@
       safeSetHTML(elBody, html);
       elSource.textContent = "Source: Free Dictionary API";
       if (audioUrl) appendAudioButton(audioUrl);
-      cacheSet(effectiveCacheKey, { html, phonetic, audioUrl, source: "Source: Free Dictionary API" });
+      
+      const cacheEntry = { html, phonetic, audioUrl, source: "Source: Free Dictionary API", group: "free", activeApi: "freedict" };
+      if (effectiveCacheKey) cacheSet(effectiveCacheKey, cacheEntry);
+      altCacheSet(`free:freedict:${baseKey}`, cacheEntry);
+      _updateSwitchButton("free", "freedict", baseKey, text, true);
+      
       return true;
     } catch (err) {
       if (err.name === "AbortError") throw err;
@@ -493,7 +498,7 @@
     }
   }
 
-  async function fetchWiktionary(text, signal, effectiveCacheKey) {
+  async function fetchWiktionary(text, signal, effectiveCacheKey, baseKey) {
     const term = text.replace(/ +/g, "_");
     try {
       const response = await fetchWithBackoff(
@@ -530,7 +535,12 @@
       elPhonetic.textContent = "";
       safeSetHTML(elBody, html);
       elSource.textContent = "Source: Wiktionary";
-      cacheSet(effectiveCacheKey, { html, phonetic: "", audioUrl: null, source: "Source: Wiktionary" });
+      
+      const cacheEntry = { html, phonetic: "", audioUrl: null, source: "Source: Wiktionary", group: "free", activeApi: "wiktionary" };
+      if (effectiveCacheKey) cacheSet(effectiveCacheKey, cacheEntry);
+      altCacheSet(`free:wiktionary:${baseKey}`, cacheEntry);
+      _updateSwitchButton("free", "wiktionary", baseKey, text, true);
+      
       return true;
     } catch (err) {
       if (err.name === "AbortError") throw err;
@@ -733,11 +743,11 @@
       incrementApiCounter(isCollegiate ? "mw" : "mw_thesaurus");
       if (parsed.audioUrl) appendAudioButton(parsed.audioUrl);
 
-      const cacheEntry = { ...parsed, source: sourceLabel, mwApi: type };
+      const cacheEntry = { ...parsed, source: sourceLabel, group: "mw", activeApi: type };
       if (effectiveCacheKey) cacheSet(effectiveCacheKey, cacheEntry);
-      mwAltCacheSet(`mwalt:${type}:${baseKey}`, cacheEntry);
+      altCacheSet(`mw:${type}:${baseKey}`, cacheEntry);
 
-      _updateMwSwitchButton(type, baseKey, text, hasMWCollegiate, hasMWThesaurus);
+      _updateSwitchButton("mw", type, baseKey, text, hasMWCollegiate && hasMWThesaurus);
       return true;
     } catch (err) {
       if (err.name === "AbortError") throw err;
@@ -748,126 +758,163 @@
   }
 
   // ─── MW Switch UI ─────────────────────────────────────────────────────────
-  function _updateMwSwitchButton(activeApi, baseKey, originalText, hasMWCollegiate, hasMWThesaurus) {
-    if (!activeApi || !(hasMWCollegiate && hasMWThesaurus)) {
-      mwSwitchBtn.style.display = "none";
-      _mwState = { activeApi: null, word: null, text: null };
+  function _updateSwitchButton(group, activeApi, baseKey, originalText, enableToggle) {
+    if (!activeApi || !enableToggle) {
+      switchBtn.style.display = "none";
+      _switchState = { group: null, activeApi: null, word: null, text: null };
       return;
     }
-    mwSwitchBtn.textContent  = activeApi === "collegiate" ? "\u21C4 Thesaurus" : "\u21C4 Collegiate";
-    mwSwitchBtn.setAttribute("aria-label", activeApi === "collegiate" ? "Switch to Merriam-Webster Thesaurus" : "Switch to Merriam-Webster Collegiate"); // Add this line
-    mwSwitchBtn.style.display = "inline-flex";
-    _mwState = { activeApi, word: baseKey, text: originalText };
+    let targetLabel, targetAria;
+    if (group === "mw") {
+      targetLabel = activeApi === "collegiate" ? "\u21C4 Thesaurus" : "\u21C4 Collegiate";
+      targetAria  = activeApi === "collegiate" ? "Switch to Merriam-Webster Thesaurus" : "Switch to Merriam-Webster Collegiate";
+    } else {
+      targetLabel = activeApi === "wiktionary" ? "\u21C4 Free Dict" : "\u21C4 Wiktionary";
+      targetAria  = activeApi === "wiktionary" ? "Switch to Free Dictionary" : "Switch to Wiktionary";
+    }
+    switchBtn.textContent = targetLabel;
+    switchBtn.setAttribute("aria-label", targetAria);
+    switchBtn.style.display = "inline-flex";
+    _switchState = { group, activeApi, word: baseKey, text: originalText };
   }
 
-  mwSwitchBtn.addEventListener("click", () => {
-    const { activeApi, word, text: originalText } = _mwState;
-    if (!activeApi || !word || !originalText) return;
+  switchBtn.addEventListener("click", () => {
+    const { group, activeApi, word, text: originalText } = _switchState;
+    if (!group || !activeApi || !word || !originalText) return;
 
-    const targetApi           = activeApi === "collegiate" ? "thesaurus" : "collegiate";
-    const altCacheKey         = `mwalt:${targetApi}:${word}`;
-    const _currentSourceLabel = activeApi === "collegiate"
-      ? "Source: Merriam-Webster Collegiate Dictionary"
-      : "Source: Merriam-Webster Thesaurus Dictionary";
+    _configuredApiWarnings = [];
 
-    if (mwAltCache.has(altCacheKey)) {
-      const cached = mwAltCache.get(altCacheKey);
+    if (_autoCloseAnimation) {
+      _autoCloseAnimation.cancel();
+      _autoCloseAnimation = null;
+    }
+
+    let targetApi, _currentSourceLabel, targetLabelText;
+    if (group === "mw") {
+      targetApi = activeApi === "collegiate" ? "thesaurus" : "collegiate";
+      _currentSourceLabel = activeApi === "collegiate"
+        ? "Source: Merriam-Webster Collegiate Dictionary"
+        : "Source: Merriam-Webster Thesaurus Dictionary";
+      targetLabelText = targetApi === "collegiate" ? "Collegiate" : "Thesaurus";
+    } else {
+      targetApi = activeApi === "wiktionary" ? "freedict" : "wiktionary";
+      _currentSourceLabel = activeApi === "wiktionary"
+        ? "Source: Wiktionary"
+        : "Source: Free Dictionary API";
+      targetLabelText = targetApi === "wiktionary" ? "Wiktionary" : "Free Dictionary";
+    }
+
+    const altCacheKey = `${group}:${targetApi}:${word}`;
+
+    if (altCache.has(altCacheKey)) {
+      const cached = altCache.get(altCacheKey);
+      altCache.delete(altCacheKey);
+      altCache.set(altCacheKey, cached);
       elPhonetic.textContent = cached.phonetic || "";
       safeSetHTML(elBody, cached.html);
       elSource.textContent = cached.source;
       if (cached.audioUrl) appendAudioButton(cached.audioUrl);
-      _mwState = { activeApi: targetApi, word, text: originalText };
-      mwSwitchBtn.textContent = targetApi === "collegiate" ? "\u21C4 Thesaurus" : "\u21C4 Collegiate";
-      mwSwitchBtn.setAttribute("aria-label", targetApi === "collegiate" ? "Switch to Merriam-Webster Thesaurus" : "Switch to Merriam-Webster Collegiate");
-      startAutoClose(); 
+      
+      _updateSwitchButton(group, targetApi, word, originalText, true);
+      startAutoClose();
       return;
     }
 
-    if (currentAbortController) currentAbortController.abort();
-    
-    // ───  Capture the Generational Ticket ───
+    if (currentAbortController) {
+      currentAbortController.abort();
+      currentAbortController = null;
+    }
+
     const snapSeq = _lookupSeq;
 
-    elSource.textContent  = "\u231B Switching\u2026";
-    mwSwitchBtn.disabled  = true;
+    elSource.textContent = "\u231B Switching\u2026";
+    switchBtn.disabled = true;
 
     _switchSafetyTimer = setTimeout(() => {
-      mwSwitchBtn.disabled = false;
+      switchBtn.disabled = false;
       elSource.textContent = _currentSourceLabel;
     }, STORAGE_TIMEOUT_MS);
 
     currentAbortController = new AbortController();
     const { signal } = currentAbortController;
 
-    // ─── Twin Engine Parity ───
     if (!isRuntimeValid()) {
       clearTimeout(_switchSafetyTimer);
-      mwSwitchBtn.disabled = false;
+      switchBtn.disabled = false;
       elSource.textContent = _currentSourceLabel;
       currentAbortController = null;
       return;
     }
 
-    try {
-      // ───  Twin Engine Parity for Storage Keys ───
-      chrome.storage.local.get(
-        [KEY_MW_KEY, KEY_MW_COLLEGIATE_KEY, KEY_MW_THESAURUS_KEY,
-         KEY_S4_UID, KEY_S4_TOKEN, KEY_LOOKUP_PRIORITY,
-         KEY_API_USAGE, KEY_API_MW_LIMIT, KEY_API_S4_LIMIT], 
-        (result) => {
-          // 1. Instantly clear the IPC storage safety timer
+    const handleFetchResult = (found) => {
+      if (snapSeq !== _lookupSeq) return;
+      if (currentAbortController?.signal === signal) currentAbortController = null;
+      switchBtn.disabled = false;
+      if (signal.aborted) return;
+      if (!found) elSource.textContent = `${_currentSourceLabel} (${targetLabelText}: no result)`;
+      startAutoClose();
+    };
+
+    const handleFetchError = (err) => {
+      if (snapSeq !== _lookupSeq) return;
+      if (currentAbortController?.signal === signal) currentAbortController = null;
+      switchBtn.disabled = false;
+      if (signal.aborted) return;
+      if (err.name !== "AbortError") writeLog("warn", `Switch error: ${err.message}`);
+      startAutoClose();
+    };
+
+    if (group === "mw") {
+      try {
+        chrome.storage.local.get([KEY_MW_KEY, KEY_MW_COLLEGIATE_KEY, KEY_MW_THESAURUS_KEY], (result) => {
           clearTimeout(_switchSafetyTimer);
-
-          // ───  Validate ticket before processing storage ───
           if (snapSeq !== _lookupSeq) return;
-
-          if (chrome.runtime.lastError || signal.aborted) {
-            const errMsg = chrome.runtime.lastError ? chrome.runtime.lastError.message : "";
-            if (errMsg.includes("context invalidated")) return; // Silent abort
-            
-            mwSwitchBtn.disabled = false;
+          
+          // Must precede any evaluation of chrome.* properties to prevent
+          // synchronous dead-object exceptions if the wrapper dies mid-flight.
+          if (!isRuntimeValid()) {
+            switchBtn.disabled = false;
             if (!signal.aborted) elSource.textContent = _currentSourceLabel;
             return;
           }
 
-          // ───  Twin Engine Parity for Legacy Key Parsing ───
-          const legacyKey       = typeof result[KEY_MW_KEY]            === "string" ? result[KEY_MW_KEY].trim()            : "";
-          const rawCollegiate   = typeof result[KEY_MW_COLLEGIATE_KEY] === "string" ? result[KEY_MW_COLLEGIATE_KEY].trim() : "";
-          const rawThesaurus    = typeof result[KEY_MW_THESAURUS_KEY]  === "string" ? result[KEY_MW_THESAURUS_KEY].trim()  : "";
-          
-          const collegiateKey   = rawCollegiate || legacyKey;
-          const thesaurusKey    = rawThesaurus;
-          const apiKey          = targetApi === "collegiate" ? collegiateKey : thesaurusKey;
-
-          if (!apiKey) {
-            mwSwitchBtn.disabled = false;
-            elSource.textContent = `${_currentSourceLabel} (Key missing)`;
+          if (chrome.runtime.lastError || signal.aborted) {
+            // It is now safe to evaluate lastError
+            const errMsg = chrome.runtime.lastError ? chrome.runtime.lastError.message : "";
+            // Keep this purely to consume the error and prevent log spam
+            if (errMsg.includes("context invalidated")) return; 
+            
+            switchBtn.disabled = false;
+            if (!signal.aborted) elSource.textContent = _currentSourceLabel;
             return;
           }
 
+          const legacyKey     = typeof result[KEY_MW_KEY]            === "string" ? result[KEY_MW_KEY].trim()            : "";
+          const rawCollegiate = typeof result[KEY_MW_COLLEGIATE_KEY] === "string" ? result[KEY_MW_COLLEGIATE_KEY].trim() : "";
+          const rawThesaurus  = typeof result[KEY_MW_THESAURUS_KEY]  === "string" ? result[KEY_MW_THESAURUS_KEY].trim()  : "";
+          const collegiateKey = rawCollegiate || legacyKey;
+          const thesaurusKey  = rawThesaurus;
+          const apiKey        = targetApi === "collegiate" ? collegiateKey : thesaurusKey;
+
+          if (!apiKey) {
+            switchBtn.disabled = false;
+            elSource.textContent = `${_currentSourceLabel} (Key missing)`;
+            return;
+          }
           fetchMwApi(targetApi, originalText, signal, apiKey, word, null, !!collegiateKey, !!thesaurusKey)
-            .then((found) => {
-              // ───  Validate ticket before DOM mutation ───
-              if (snapSeq !== _lookupSeq) return;
-
-              mwSwitchBtn.disabled = false;
-              if (!signal.aborted && !found) elSource.textContent = `${_currentSourceLabel} (No result)`;
-              if (!signal.aborted) startAutoClose();
-            })
-            .catch((err) => {
-              // ───  Validate ticket before DOM mutation ───
-              if (snapSeq !== _lookupSeq) return;
-
-              mwSwitchBtn.disabled = false;
-              if (err.name !== "AbortError") writeLog("warn", `MW Switch error: ${err.message}`);
-              if (!signal.aborted) startAutoClose();
-            });
-      });
-    } catch (err) {
+            .then(handleFetchResult).catch(handleFetchError);
+        });
+      } catch (err) {
+        clearTimeout(_switchSafetyTimer);
+        switchBtn.disabled = false;
+        elSource.textContent = _currentSourceLabel;
+        if (currentAbortController?.signal === signal) currentAbortController = null;
+      }
+    } else {
       clearTimeout(_switchSafetyTimer);
-      mwSwitchBtn.disabled = false;
-      elSource.textContent = _currentSourceLabel;
-      if (currentAbortController?.signal === signal) currentAbortController = null;
+      const fetchFn = targetApi === "wiktionary" ? fetchWiktionary : fetchFreeDictionary;
+      fetchFn(originalText, signal, null, word)
+        .then(handleFetchResult).catch(handleFetchError);
     }
   });
 
@@ -1012,7 +1059,12 @@
 
 // ─── Main Lookup Orchestrator ─────────────────────────────────────────────
   async function lookupWord(text) {
-    pauseAutoClose();
+    // Hard cancel the timer so it is completely stripped from the UI 
+    // during the loading phase, eliminating any phantom play states.
+    if (_autoCloseAnimation) {
+      _autoCloseAnimation.cancel();
+      _autoCloseAnimation = null;
+    }
 
     const viewDict = document.getElementById("view-dictionary");
     const viewLf   = document.getElementById("view-local-files");
@@ -1026,8 +1078,8 @@
 
     stopAudio();
     _configuredApiWarnings = [];
-    _mwState = { activeApi: null, word: null, text: null };
-    mwSwitchBtn.style.display = "none";
+    _switchState = { group: null, activeApi: null, word: null, text: null };
+    switchBtn.style.display = "none";
 
     elWord.textContent     = text;
     elPhonetic.textContent = "";
@@ -1050,7 +1102,10 @@
         safeSetHTML(elBody, cached.html);
         elSource.textContent = cached.source;
         if (cached.audioUrl) appendAudioButton(cached.audioUrl);
-        if (cached.mwApi) _updateMwSwitchButton(cached.mwApi, baseKey, text, !!keys.mwCollegiateKey, !!keys.mwThesaurusKey);
+        if (cached.group && cached.activeApi) {
+          const isMw = cached.group === "mw";
+          _updateSwitchButton(cached.group, cached.activeApi, baseKey, text, isMw ? (!!keys.mwCollegiateKey && !!keys.mwThesaurusKey) : true);
+        }
         startAutoClose();
         return;
       }
@@ -1074,8 +1129,8 @@
       const hasMWCollegiate = !!keys.mwCollegiateKey && !mwOverLimit;
       const hasMWThesaurus  = !!keys.mwThesaurusKey  && !mwOverLimit;
 
-      const _freeDict  = { label: "Free Dictionary", fn: () => fetchFreeDictionary(text, signal, effectiveCacheKey) };
-      const _wikt      = { label: "Wiktionary",       fn: () => fetchWiktionary(text, signal, effectiveCacheKey) };
+      const _freeDict  = { label: "Free Dictionary", fn: () => fetchFreeDictionary(text, signal, effectiveCacheKey, baseKey) };
+      const _wikt      = { label: "Wiktionary",       fn: () => fetchWiktionary(text, signal, effectiveCacheKey, baseKey) };
       const _mwCol     = { label: "MW Collegiate",    fn: () => fetchMwApi("collegiate", text, signal, keys.mwCollegiateKey, baseKey, effectiveCacheKey, hasMWCollegiate, hasMWThesaurus) };
       const _mwThes    = { label: "MW Thesaurus",     fn: () => fetchMwApi("thesaurus",  text, signal, keys.mwThesaurusKey,  baseKey, effectiveCacheKey, hasMWCollegiate, hasMWThesaurus) };
       const _s4Vocab   = { label: "STANDS4 Vocabulary", fn: () => fetchSTANDS4Vocab(text, signal, keys.s4Uid, keys.s4Token, effectiveCacheKey) };
@@ -1603,18 +1658,14 @@ function _initLocalFileManager() {
     // 2. If a user managed to trigger a lookup during the microsecond IPC delay
     if (_lookupSeq > 0) {
       if (document.documentElement) document.documentElement.style.visibility = "";
-      _safeStartAutoClose();
+      // Do NOT start the timer here. 
+      // The `finally` block in lookupWord() will handle it upon network resolution.
       return;
     }
 
     // 3. Evaluate the startup state
     if (!chrome.runtime.lastError && response && response.isStartup) {
-      // Direct, synchronous self-termination. 
-      try { 
-        window.close(); 
-      } catch(e) {
-        writeLog("warn", "Instant startup termination failed.");
-      }
+      try { window.close(); } catch(e) { writeLog("warn", "Instant startup termination failed."); }
     } else {
       // 4. We are staying open. Reveal the UI and initialize normal lifecycle.
       if (document.documentElement) document.documentElement.style.visibility = "";

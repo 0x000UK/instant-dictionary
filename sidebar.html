@@ -111,7 +111,7 @@
     }
 
     /* ─── Header Buttons ──────────────────────────────────────────────────── */
-    #dict-mw-switch-btn {
+    #dict-switch-btn {
       background:    var(--dict-accent-bg);
       color:         var(--dict-accent-text);
       border:        1px solid var(--sidebar-border);
@@ -121,8 +121,8 @@
       cursor:        pointer;
       display:       none; 
     }
-    #dict-mw-switch-btn:hover:not(:disabled) { filter: brightness(0.95); }
-    #dict-mw-switch-btn:disabled             { opacity: 0.5; cursor: not-allowed; }
+    #dict-switch-btn:hover:not(:disabled) { filter: brightness(0.95); }
+    #dict-switch-btn:disabled             { opacity: 0.5; cursor: not-allowed; }
 
     #idb-open-trigger-btn {
       background:      var(--dict-accent-bg);
@@ -433,7 +433,7 @@
       <div class="sidebar-header-top">
         <div id="dict-tooltip-word">Dictionary</div>
         <div class="sidebar-header-actions">
-          <button id="dict-mw-switch-btn" type="button" aria-label="Switch dictionary"></button>
+          <button id="dict-switch-btn" type="button" aria-label="Switch dictionary"></button>
           <button id="idb-open-trigger-btn" type="button" aria-label="Open Local Files" title="Open local file (PDF, EPUB, DOCX)">📂</button>
         </div>
       </div>

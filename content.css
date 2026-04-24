@@ -100,7 +100,7 @@
 }
 
 /* ─── MW dictionary switch button ─── */
-#dict-mw-switch-btn {
+#dict-switch-btn {
   display: none; /* JS overrides to "" when applicable */
   align-items: center;
   gap: 3px;
@@ -123,20 +123,20 @@
   flex-shrink: 0;
 }
 
-#dict-mw-switch-btn:hover {
+#dict-switch-btn:hover {
   background: var(--dict-close-hover-bg, rgba(0, 0, 0, 0.13));
 }
 
-#dict-mw-switch-btn:active {
+#dict-switch-btn:active {
   background: var(--dict-border, rgba(0, 0, 0, 0.18));
 }
 
-#dict-mw-switch-btn:disabled {
+#dict-switch-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-#dict-mw-switch-btn:focus-visible {
+#dict-switch-btn:focus-visible {
   outline: 2px solid var(--dict-accent-text, #555);
   outline-offset: 2px;
 }
@@ -418,7 +418,7 @@
 
   #dict-tooltip-close,
   .dict-audio-btn,
-  #dict-mw-switch-btn {
+  #dict-switch-btn {
     transition: none;
   }
 
@@ -485,19 +485,19 @@
     forced-color-adjust: none;
   }
 
-  #dict-mw-switch-btn {
+  #dict-switch-btn {
     border: 1px solid ButtonText;
     background: ButtonFace;
     color: ButtonText;
     forced-color-adjust: none;
   }
 
-  #dict-mw-switch-btn:hover {
+  #dict-switch-btn:hover {
     background: Highlight;
     color: HighlightText;
   }
 
-  #dict-mw-switch-btn:focus-visible {
+  #dict-switch-btn:focus-visible {
     outline: 2px solid Highlight;
     outline-offset: 2px;
   }

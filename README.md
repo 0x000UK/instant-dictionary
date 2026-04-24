@@ -75,7 +75,7 @@ Once the sidebar is open:
 - Example sentences where available
 - Synonyms and antonyms (Free Dictionary source)
 - A **🔊 Listen** button for audio pronunciation playback (Available via Merriam-Webster and Free Dictionary sources)
-- A **⇄ Thesaurus / ⇄ Collegiate** toggle button when both Merriam-Webster keys are configured — lets you switch between the Collegiate and Thesaurus results for the same word without a new lookup
+- A **⇄** toggle button — lets you switch between dictionary sources without a new lookup (switches between Wiktionary and Free Dictionary by default, or Collegiate and Thesaurus when both Merriam-Webster keys are configured)
 - The source the definition was pulled from
 
 ---
@@ -117,11 +117,11 @@ Connecting Merriam-Webster unlocks **native audio pronunciations** and comprehen
 | Key | What it unlocks |
 |---|---|
 | **Collegiate / Learner's Dictionary API Key** | Authoritative definitions + **🔊 native audio pronunciation playback** |
-| **Thesaurus Dictionary API Key** | Synonyms and related words; enables the in-tooltip ⇄ toggle button |
+| **Thesaurus Dictionary API Key** | Synonyms and related words; enables the in-tooltip ⇄ toggle button for Merriam-Webster results |
 
 → [Register for free API keys](https://dictionaryapi.com/register/index) — create separate accounts (or separate products) for Collegiate/Learner's and Thesaurus.
 
-You can save either or both. Saving only the Collegiate key gives you definitions and audio. Saving both unlocks the in-tooltip ⇄ toggle so you can flip between dictionary and thesaurus views for the same word.
+You can save either or both. Saving only the Collegiate key gives you definitions and audio. Saving both unlocks the in-tooltip ⇄ toggle for Merriam-Webster so you can flip between dictionary and thesaurus views for the same word.
 
 > **Important:** The two MW keys are different UUIDs. Entering the same key in both fields is detected and flagged as an error in the popup.
 

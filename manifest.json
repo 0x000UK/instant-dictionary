@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Instant Dictionary",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Double-click or select any word, phrase, or idiom to see its definition instantly.",
   "author": "UK",
   "homepage_url": "https://github.com/0x000UK/instant-dictionary",
